@@ -21,13 +21,13 @@ public partial class HomeViewModel : ObservableObject
 
     // Observable Properties (auto-notify binding)
     [ObservableProperty]
-    private ActivityResponse currentActivity;
+    private ActivityResponse? currentActivity;
 
     [ObservableProperty]
     private bool isLoading;
 
     [ObservableProperty]
-    private string errorMessage;
+    private string? errorMessage;
 
     [ObservableProperty]
     private bool hasActivity;
@@ -85,7 +85,7 @@ public partial class HomeViewModel : ObservableObject
     /// Auto-load if no activity yet
     /// </summary>
     [RelayCommand]
-    public async Task OnAppearing()
+    public async Task PageAppearing()
     {
         if (!HasActivity)
         {

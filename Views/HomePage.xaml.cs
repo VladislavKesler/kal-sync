@@ -14,7 +14,7 @@ public partial class HomePage : ContentPage
         // Load data when page appears
         if (BindingContext is ViewModels.HomeViewModel vm)
         {
-            vm.OnAppearingCommand.Execute(null);
+            vm.PageAppearingCommand.Execute(null);
         }
     }
 }

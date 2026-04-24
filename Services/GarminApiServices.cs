@@ -46,7 +46,7 @@ public class GarminApiService
     /// Fetch latest activity from backend
     /// </summary>
     /// <returns>ActivityResponse with calculated calories</returns>
-    public async Task<ActivityResponse> GetLatestActivityAsync()
+    public async Task<ActivityResponse?> GetLatestActivityAsync()
     {
         try
         {

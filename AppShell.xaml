@@ -1,19 +1,15 @@
-namespace kal_sync.Views;
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="kal_sync.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:kal_sync.Views">
 
-public partial class HomePage : ContentPage
-{
-    public HomePage()
-    {
-        InitializeComponent();
-    }
-    
-    protected override void OnAppearing()
-    {
-        base.OnAppearing();
-        
-        if (BindingContext is ViewModels.HomeViewModel vm)
-        {
-            vm.OnAppearingCommand.Execute(null);
-        }
-    }
-}
+    <TabBar>
+        <ShellContent
+            Title="Home"
+            ContentTemplate="{DataTemplate local:HomePage}"
+            Route="HomePage" />
+    </TabBar>
+
+</Shell>
