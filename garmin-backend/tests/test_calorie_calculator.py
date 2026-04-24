@@ -1,0 +1,109 @@
+"""
+Unit tests for calorie_calculator.py
+
+These tests are pure unit tests — no network, no database, no FastAPI app.
+They run in milliseconds and should always pass in CI.
+"""
+
+import pytest
+
+
+# ── Helpers (mirror what calorie_calculator.py will implement) ──────────────
+# Once calorie_calculator.py exists, replace these with:
+#   from calorie_calculator import calculate_calories, ActivityType
+
+def calculate_hrr(max_hr: int, resting_hr: int) -> int:
+    return max_hr - resting_hr
+
+
+def calculate_intensity(avg_hr: int, resting_hr: int, hrr: int) -> float:
+    return (avg_hr - resting_hr) / hrr
+
+
+def calculate_calories(
+    avg_hr: int,
+    max_hr: int,
+    resting_hr: int,
+    duration_minutes: int,
+    bmr_kcal: float,
+    activity_factor: float,
+) -> float:
+    hrr = calculate_hrr(max_hr, resting_hr)
+    intensity = calculate_intensity(avg_hr, resting_hr, hrr)
+    kcal_per_min = intensity * (bmr_kcal / 1440) * activity_factor
+    return kcal_per_min * duration_minutes
+
+
+# ── HRR tests ───────────────────────────────────────────────────────────────
+
+class TestHeartRateReserve:
+    def test_hrr_is_difference_of_max_and_resting(self) -> None:
+        assert calculate_hrr(max_hr=185, resting_hr=55) == 130
+
+    def test_hrr_with_low_resting_hr(self) -> None:
+        assert calculate_hrr(max_hr=190, resting_hr=40) == 150
+
+
+# ── Intensity tests ──────────────────────────────────────────────────────────
+
+class TestIntensity:
+    def test_intensity_at_max_effort_is_one(self) -> None:
+        # When avg_hr == max_hr, intensity should be 1.0
+        hrr = calculate_hrr(max_hr=185, resting_hr=55)
+        intensity = calculate_intensity(avg_hr=185, resting_hr=55, hrr=hrr)
+        assert intensity == pytest.approx(1.0)
+
+    def test_intensity_at_rest_is_zero(self) -> None:
+        # When avg_hr == resting_hr, intensity should be 0.0
+        hrr = calculate_hrr(max_hr=185, resting_hr=55)
+        intensity = calculate_intensity(avg_hr=55, resting_hr=55, hrr=hrr)
+        assert intensity == pytest.approx(0.0)
+
+    def test_intensity_at_midpoint(self) -> None:
+        hrr = calculate_hrr(max_hr=185, resting_hr=55)  # HRR = 130
+        avg_hr = 55 + 65  # exactly halfway = 120
+        intensity = calculate_intensity(avg_hr=avg_hr, resting_hr=55, hrr=hrr)
+        assert intensity == pytest.approx(0.5)
+
+
+# ── Full calorie calculation ─────────────────────────────────────────────────
+
+class TestCalorieCalculation:
+    """
+    Reference values computed manually from the formula in Plan_für_die_Featureimplementation.md:
+        HRR = max_hr - resting_hr
+        intensity = (avg_hr - resting_hr) / HRR
+        kcal/min = intensity * (BMR / 1440) * activity_factor
+        total = kcal/min * duration_minutes
+    """
+
+    def test_zone2_cardio_session(self) -> None:
+        # Typical Zone 2 session: 60 min, avg HR 130, max 185, resting 55
+        # HRR = 130, intensity = 75/130 ≈ 0.577
+        # kcal/min = 0.577 * (1942/1440) * 1.2 ≈ 0.936
+        # total ≈ 56.1 kcal
+        result = calculate_calories(
+            avg_hr=130,
+            max_hr=185,
+            resting_hr=55,
+            duration_minutes=60,
+            bmr_kcal=1942.0,
+            activity_factor=1.2,
+        )
+        assert result == pytest.approx(56.1, rel=0.01)
+
+    def test_hiit_session_burns_more_than_zone2(self) -> None:
+        # Same duration, higher intensity (avg HR 160) and higher factor (1.8)
+        zone2 = calculate_calories(130, 185, 55, 60, 1942.0, 1.2)
+        hiit = calculate_calories(160, 185, 55, 60, 1942.0, 1.8)
+        assert hiit > zone2
+
+    def test_longer_session_burns_more_calories(self) -> None:
+        short = calculate_calories(130, 185, 55, 30, 1942.0, 1.2)
+        long_ = calculate_calories(130, 185, 55, 60, 1942.0, 1.2)
+        assert long_ == pytest.approx(short * 2, rel=0.001)
+
+    def test_higher_bmr_increases_calories(self) -> None:
+        low_bmr = calculate_calories(130, 185, 55, 60, 1500.0, 1.2)
+        high_bmr = calculate_calories(130, 185, 55, 60, 2200.0, 1.2)
+        assert high_bmr > low_bmr

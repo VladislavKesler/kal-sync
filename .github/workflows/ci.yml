@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # C# Tests
+  # ─────────────────────────────────────────────────────────────────────────
+  csharp-tests:
+    name: C# — Build & Test
+    runs-on: windows-latest   # MAUI Windows target requires Windows runner
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui
+
+      - name: Restore dependencies
+        run: dotnet restore kal-sync.sln
+
+      - name: Build solution
+        run: dotnet build kal-sync.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: >
+          dotnet test kal-sync.Tests/kal-sync.Tests.csproj
+          --no-build
+          --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --collect:"XPlat Code Coverage"
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: csharp-test-results
+          path: "**/*.trx"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Python Tests + Linting
+  # ─────────────────────────────────────────────────────────────────────────
+  python-tests:
+    name: Python — Lint, Type Check & Test
+    runs-on: ubuntu-latest
+    if: hashFiles('garmin-backend/requirements.txt') != ''	
+
+    defaults:
+      run:
+        working-directory: garmin-backend   # All Python commands run here
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Check formatting with ruff
+        run: ruff format --check .
+
+      - name: Type check with mypy
+        run: mypy .
+
+      - name: Run unit tests (no integration tests in CI)
+        run: >
+          pytest
+          -m "not integration"
+          --cov=.
+          --cov-report=term-missing
+          --cov-fail-under=70
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: python-coverage
+          path: garmin-backend/.coverage

@@ -1,0 +1,68 @@
+[project]
+name = "garmin-backend"
+version = "0.1.0"
+description = "Garmin calorie calculator backend for kal-sync"
+requires-python = ">=3.11"
+
+# ─── Ruff (Linter + Formatter) ───────────────────────────────────────────────
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear (catches common bugs)
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade (keeps syntax modern)
+    "N",   # pep8 naming
+    "ANN", # flake8-annotations (enforces type hints)
+]
+ignore = [
+    "ANN101", # missing type annotation for self — not needed
+    "ANN102", # missing type annotation for cls — not needed
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["garmin_service", "calorie_calculator", "models"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# ─── Mypy (Type Checker) ─────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+# Pydantic v2 plugin for better type inference
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "garminconnect.*"
+ignore_missing_imports = true  # No type stubs available for this library
+
+# ─── Pytest ──────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"          # auto-detect async tests (pytest-asyncio)
+testpaths = ["tests"]
+markers = [
+    "integration: marks tests that require the full app running (deselect with '-m not integration')",
+    "unit: marks pure unit tests with no external dependencies",
+]
+# Run only unit tests by default — integration tests require Garmin credentials
+addopts = "-m 'not integration' -v"
+
+# ─── Coverage ────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["."]
+omit = ["tests/*", "**/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 70   # Minimum 70% coverage — adjust upward over time
+show_missing = true

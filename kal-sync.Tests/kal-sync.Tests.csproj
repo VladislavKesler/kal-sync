@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+
+    <!-- Disable StyleCop for test projects — less strict is fine here -->
+    <StyleCopEnabled>false</StyleCopEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="FluentAssertions" Version="8.9.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="xunit.v3" Version="1.0.0" />
+  </ItemGroup>
+
+  <!--
+    NOTE: We cannot directly reference the MAUI project here because MAUI projects
+    target mobile frameworks (net9.0-android, net9.0-ios, etc.), not net9.0.
+    
+    Strategy: Extract pure logic (services, models, calculators) into a separate
+    class library project (kal-sync.Core) that targets net9.0.
+    Both kal-sync (MAUI) and kal-sync.Tests can then reference kal-sync.Core.
+    
+    For now, business logic under test is duplicated here as a starting point.
+    Refactor to kal-sync.Core once the feature set stabilizes.
+  -->
+
+</Project>
