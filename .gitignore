@@ -1,0 +1,30 @@
+# Visual Studio
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userprefs
+
+# Build Output
+bin/
+obj/
+.build/
+
+# NuGet
+.nuget/
+*.nupkg
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE Cache
+.v17/
+CopilotIndex/
+FileContentIndex/
+
+# Secrets
+.env
+.env.local
+credentials/
