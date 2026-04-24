@@ -6,11 +6,12 @@ public partial class HomePage : ContentPage
     {
         InitializeComponent();
     }
-    
+
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        
+
+        // Load data when page appears
         if (BindingContext is ViewModels.HomeViewModel vm)
         {
             vm.OnAppearingCommand.Execute(null);
