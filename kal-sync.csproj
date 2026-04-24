@@ -57,6 +57,11 @@
 
 		<!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+
+        <Compile Remove="kal-sync.Tests\**" />
+        <None Remove="kal-sync.Tests\**" />
+        <Content Remove="kal-sync.Tests\**" />
+        
 	</ItemGroup>
 
 	<ItemGroup>
