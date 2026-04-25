@@ -20,10 +20,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Personal constants — override via env vars for flexibility
+# BMR via Katch-McArdle — set in .env, will be replaced by Phase 2 Settings screen
 BMR_KCAL = float(os.getenv("BMR_KCAL", "1942"))
-RESTING_HR = int(os.getenv("RESTING_HR", "60"))
-MAX_HR = int(os.getenv("MAX_HR", "181"))
 
 garmin_service = GarminService(
     email=os.getenv("GARMIN_EMAIL", ""),
@@ -39,34 +37,37 @@ async def health_check() -> dict[str, str]:
 @app.get("/api/activities/latest", response_model=ActivityResponse)
 async def get_latest_activity() -> ActivityResponse:
     try:
-        data = await garmin_service.get_latest_activity()
+        stats = await garmin_service.get_user_stats()
+        activity = await garmin_service.get_latest_activity()
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Garmin API error: {exc}") from exc
 
+    resting_hr = stats["resting_hr"]
+
     try:
-        activity_type = ActivityType(data.get("activity_type", "strength"))
+        activity_type = ActivityType(activity.get("activity_type", "strength"))
     except ValueError:
         activity_type = ActivityType.STRENGTH
 
     factor = get_activity_factor(activity_type)
     calculated = calculate_calories(
-        avg_hr=data["avg_hr"],
-        max_hr=data["max_hr"],
-        resting_hr=RESTING_HR,
-        duration_minutes=data["duration_minutes"],
+        avg_hr=activity["avg_hr"],
+        max_hr=activity["max_hr"],
+        resting_hr=resting_hr,
+        duration_minutes=activity["duration_minutes"],
         bmr_kcal=BMR_KCAL,
         activity_factor=factor,
     )
 
     return ActivityResponse(
-        activity_date=data["activity_date"],
-        duration_minutes=data["duration_minutes"],
-        avg_hr=data["avg_hr"],
-        max_hr=data["max_hr"],
-        garmin_calories=data["garmin_calories"],
+        activity_date=activity["activity_date"],
+        duration_minutes=activity["duration_minutes"],
+        avg_hr=activity["avg_hr"],
+        max_hr=activity["max_hr"],
+        garmin_calories=activity["garmin_calories"],
         calculated_calories=calculated,
-        difference=data["garmin_calories"] - calculated,
-        zones=ZoneData(**data["zones"]),
+        difference=activity["garmin_calories"] - calculated,
+        zones=ZoneData(**activity["zones"]),
     )
