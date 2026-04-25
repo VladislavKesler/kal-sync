@@ -107,3 +107,50 @@ class TestCalorieCalculation:
         low_bmr = calculate_calories(130, 185, 55, 60, 1500.0, 1.2)
         high_bmr = calculate_calories(130, 185, 55, 60, 2200.0, 1.2)
         assert high_bmr > low_bmr
+
+
+# ── Keytel (2005) formula ────────────────────────────────────────────────────
+
+def calculate_calories_keytel(
+    avg_hr: int,
+    weight_kg: float,
+    age: int,
+    sex_male: bool,
+    duration_minutes: int,
+) -> float:
+    if sex_male:
+        kcal_per_min = (0.6309 * avg_hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969) / 4.184
+    else:
+        kcal_per_min = (0.4472 * avg_hr - 0.1263 * weight_kg + 0.074 * age - 20.4022) / 4.184
+    return round(max(kcal_per_min, 0.0) * duration_minutes, 1)
+
+
+class TestKeytelFormula:
+    """
+    Reference values verified by hand against the Keytel 2005 paper coefficients.
+    Male:   (0.6309·HR + 0.1988·W + 0.2017·age − 55.0969) / 4.184
+    Female: (0.4472·HR − 0.1263·W + 0.074·age  − 20.4022) / 4.184
+    """
+
+    def test_typical_male_60min(self) -> None:
+        # avg HR 140, 91 kg, age 30, male, 60 min
+        # kcal/min = (0.6309*140 + 0.1988*91 + 0.2017*30 - 55.0969) / 4.184
+        #          = (88.326 + 18.091 + 6.051 - 55.0969) / 4.184
+        #          = 57.371 / 4.184 ≈ 13.71  → ×60 ≈ 822.5
+        result = calculate_calories_keytel(140, 91.0, 30, True, 60)
+        assert result == pytest.approx(822.5, rel=0.01)
+
+    def test_female_burns_less_than_male_same_inputs(self) -> None:
+        male = calculate_calories_keytel(140, 70.0, 30, True, 60)
+        female = calculate_calories_keytel(140, 70.0, 30, False, 60)
+        assert male > female
+
+    def test_longer_duration_scales_linearly(self) -> None:
+        half = calculate_calories_keytel(130, 80.0, 28, True, 30)
+        full = calculate_calories_keytel(130, 80.0, 28, True, 60)
+        assert full == pytest.approx(half * 2, rel=0.01)
+
+    def test_negative_kcal_per_min_is_clamped_to_zero(self) -> None:
+        # Very low HR for a male could produce negative raw value → should be 0
+        result = calculate_calories_keytel(avg_hr=50, weight_kg=50.0, age=20, sex_male=True, duration_minutes=30)
+        assert result >= 0.0

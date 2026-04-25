@@ -6,11 +6,6 @@
              Title="kal-sync"
              BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
 
-    <!-- Binding Context -->
-    <ContentPage.BindingContext>
-        <vm:HomeViewModel x:Name="ViewModel" />
-    </ContentPage.BindingContext>
-
     <VerticalStackLayout Padding="20" Spacing="15">
 
         <!-- Loading Indicator -->
