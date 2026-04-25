@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using kal_sync.Models;
 using Microsoft.Maui.Storage;
 
@@ -18,6 +19,10 @@ public class UserProfileService
 
     // ── Persistence ─────────────────────────────────────────────────────────
 
+    // CA1822 suppressed: intentionally non-static so the service can be injected
+    // as a dependency and replaced by a mock or alternative implementation.
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public UserProfile Load() => new()
     {
         WeightKg = Preferences.Get(WeightKey, 80.0),
@@ -27,6 +32,8 @@ public class UserProfileService
         SurplusPercent = Preferences.Get(SurplusKey, 5.0),
     };
 
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public void Save(UserProfile profile)
     {
         Preferences.Set(WeightKey, profile.WeightKg);
@@ -47,6 +54,8 @@ public class UserProfileService
         => 370.0 + (21.6 * leanBodyMassKg);
 
     /// <summary>Convenience: load profile → LBM → BMR.</summary>
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public double GetBmr(UserProfile profile)
     {
         double lbm = CalculateLeanBodyMass(profile.WeightKg, profile.BodyFatPercent);

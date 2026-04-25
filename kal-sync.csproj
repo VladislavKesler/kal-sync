@@ -33,6 +33,14 @@
 		<!-- To develop, package, and publish an app to the Microsoft Store, see: https://aka.ms/MauiTemplateUnpackaged -->
 		<WindowsPackageType>None</WindowsPackageType>
 
+		<!-- Suppress structural/platform analyzer violations:
+		     CA1707    — namespace kal_sync derives from project name "kal-sync"
+		     CA1711    — AppDelegate is the MAUI-required iOS/macOS entry point
+		     CA1805    — template-generated default initialisation in MainPage
+		     MVVMTK0045 — partial-property [ObservableProperty] requires C# 13
+		                   + CsWinRT support; backing-field approach is used instead -->
+		<NoWarn>CA1707;CA1711;CA1805;MVVMTK0045</NoWarn>
+
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>

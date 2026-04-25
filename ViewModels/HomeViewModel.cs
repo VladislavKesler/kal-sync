@@ -18,24 +18,24 @@ public partial class HomeViewModel : ObservableObject
     private readonly UserProfileService _userProfileService;
 
     [ObservableProperty]
-    private ActivityResponse? currentActivity;
+    private ActivityResponse? _currentActivity;
 
     [ObservableProperty]
-    private bool isLoading;
+    private bool _isLoading;
 
     [ObservableProperty]
-    private string? errorMessage;
+    private string? _errorMessage;
 
     [ObservableProperty]
-    private bool hasActivity;
+    private bool _hasActivity;
 
     public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService)
     {
         _apiService = apiService;
         _userProfileService = userProfileService;
-        HasActivity = false;
-        IsLoading = false;
-        ErrorMessage = null;
+        _hasActivity = false;
+        _isLoading = false;
+        _errorMessage = null;
     }
 
     /// <summary>Load latest activity from backend, using the saved user profile for the formula.</summary>
@@ -76,6 +76,8 @@ public partial class HomeViewModel : ObservableObject
     public async Task PageAppearing()
     {
         if (!HasActivity)
+        {
             await LoadLatestActivity();
+        }
     }
 }

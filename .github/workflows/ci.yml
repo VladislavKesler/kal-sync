@@ -26,16 +26,23 @@ jobs:
       - name: Install MAUI workload
         run: dotnet workload install maui
 
-      - name: Restore dependencies
-        run: dotnet restore kal-sync.sln
+      # Build MAUI app for Windows only.
+      # On a Windows runner the project would also try to compile for
+      # net9.0-android / net9.0-ios / net9.0-maccatalyst — those targets
+      # require SDKs that are not available on a Windows CI runner.
+      # Scoping to the Windows TFM gives us a fast compilation smoke-test
+      # without cross-platform SDK dependencies.
+      - name: Build MAUI app (Windows target, compilation smoke-test)
+        run: >
+          dotnet build kal-sync.csproj
+          --framework net9.0-windows10.0.19041.0
+          --configuration Release
 
-      - name: Build solution
-        run: dotnet build kal-sync.sln --no-restore --configuration Release
-
-      - name: Run unit tests
+      # The test project is a plain net9.0 class library — it does NOT
+      # reference the MAUI project, so it builds on any runner.
+      - name: Build & run unit tests
         run: >
           dotnet test kal-sync.Tests/kal-sync.Tests.csproj
-          --no-build
           --configuration Release
           --logger "trx;LogFileName=test-results.trx"
           --collect:"XPlat Code Coverage"
@@ -53,7 +60,7 @@ jobs:
   python-tests:
     name: Python — Lint, Type Check & Test
     runs-on: ubuntu-latest
-    if: hashFiles('garmin-backend/requirements.txt') != ''	
+    if: hashFiles('garmin-backend/requirements.txt') != ''
 
     defaults:
       run:

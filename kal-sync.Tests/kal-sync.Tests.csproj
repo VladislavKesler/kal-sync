@@ -7,8 +7,10 @@
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
 
-    <!-- Disable StyleCop for test projects — less strict is fine here -->
-    <StyleCopEnabled>false</StyleCopEnabled>
+    <!-- Suppress analyzer rules that conflict with xUnit naming conventions
+         (underscores in method names) and StyleCop rules that are noise in
+         test projects (missing file headers, single-line comments, etc.). -->
+    <NoWarn>SA0001;SA1300;SA1136;SA1201;SA1025;SA1407;SA1501;SA1502;SA1503;SA1512;SA1633;CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

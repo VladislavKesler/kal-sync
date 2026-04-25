@@ -11,24 +11,24 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly UserProfileService _profileService;
 
-    // ── Form fields ─────────────────────────────────────────────────────────
+    // ── Form fields ──────────────────────────────────────────────────────────
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CalculatedBmr))]
-    private double weightKg;
+    private double _weightKg;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CalculatedBmr))]
-    private double bodyFatPercent;
+    private double _bodyFatPercent;
 
     [ObservableProperty]
-    private int age;
+    private int _age;
 
     [ObservableProperty]
-    private string selectedSex = "Male";
+    private string _selectedSex = "Male";
 
     [ObservableProperty]
-    private double surplusPercent;
+    private double _surplusPercent;
 
     // ── Derived display ──────────────────────────────────────────────────────
 

@@ -41,9 +41,9 @@ async def health_check() -> dict[str, str]:
 
 @app.get("/api/activities/latest", response_model=ActivityResponse)
 async def get_latest_activity(
-    weight_kg: float | None = Query(default=None, description="Body weight in kg (enables Keytel formula)"),
-    age: int | None = Query(default=None, description="Age in years (enables Keytel formula)"),
-    sex: int | None = Query(default=None, description="0 = male, 1 = female (enables Keytel formula)"),
+    weight_kg: float | None = Query(default=None, description="kg (Keytel)"),
+    age: int | None = Query(default=None, description="years (Keytel)"),
+    sex: int | None = Query(default=None, description="0=male 1=female (Keytel)"),
 ) -> ActivityResponse:
     try:
         stats = await garmin_service.get_user_stats()
@@ -56,18 +56,17 @@ async def get_latest_activity(
     resting_hr = stats["resting_hr"]
 
     # ── Choose formula ───────────────────────────────────────────────────────
-    use_keytel = weight_kg is not None and age is not None and sex is not None
-
-    if use_keytel:
+    # Keytel (2005) when all three body-composition params are supplied;
+    # otherwise fall back to the HRR / intensity formula with env BMR.
+    if weight_kg is not None and age is not None and sex is not None:
         calculated = calculate_calories_keytel(
             avg_hr=activity["avg_hr"],
-            weight_kg=weight_kg,  # type: ignore[arg-type]
-            age=age,              # type: ignore[arg-type]
-            sex_male=(sex == 0),  # type: ignore[operator]
+            weight_kg=weight_kg,
+            age=age,
+            sex_male=(sex == 0),
             duration_minutes=activity["duration_minutes"],
         )
     else:
-        # Fallback: HRR / intensity formula with env BMR
         try:
             activity_type = ActivityType(activity.get("activity_type", "strength"))
         except ValueError:

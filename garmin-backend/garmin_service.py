@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from typing import Any
 
 from garminconnect import Garmin
 
@@ -19,7 +20,7 @@ class GarminService:
             logger.info("Garmin login successful")
         return self._client
 
-    async def get_user_stats(self) -> dict:
+    async def get_user_stats(self) -> dict[str, Any]:
         """Fetch today's stats: resting HR from Garmin."""
         client = self._ensure_logged_in()
         stats = client.get_stats(date.today().isoformat())
@@ -27,7 +28,7 @@ class GarminService:
             "resting_hr": int(stats.get("restingHeartRate", 60)),
         }
 
-    async def get_latest_activity(self) -> dict:
+    async def get_latest_activity(self) -> dict[str, Any]:
         client = self._ensure_logged_in()
 
         activities = client.get_activities(0, 1)
@@ -44,16 +45,16 @@ class GarminService:
             "avg_hr": int(activity.get("averageHR", 0)),
             "max_hr": max_hr,
             "garmin_calories": float(activity.get("calories", 0)),
-            "activity_date": activity.get(
-                "startTimeLocal", date.today().isoformat()
-            )[:10],
+            "activity_date": activity.get("startTimeLocal", date.today().isoformat())[
+                :10
+            ],
             "activity_type": activity.get("activityType", {}).get(
                 "typeKey", "strength_training"
             ),
             "zones": self._extract_zones(activity),
         }
 
-    def _extract_zones(self, activity: dict) -> dict:
+    def _extract_zones(self, activity: dict[str, Any]) -> dict[str, int]:
         return {
             f"zone{i}_minutes": int(activity.get(f"hrTimeInZone_{i}", 0) / 60)
             for i in range(1, 6)

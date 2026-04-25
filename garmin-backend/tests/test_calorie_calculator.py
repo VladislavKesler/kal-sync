@@ -7,10 +7,10 @@ They run in milliseconds and should always pass in CI.
 
 import pytest
 
-
 # ── Helpers (mirror what calorie_calculator.py will implement) ──────────────
 # Once calorie_calculator.py exists, replace these with:
 #   from calorie_calculator import calculate_calories, ActivityType
+
 
 def calculate_hrr(max_hr: int, resting_hr: int) -> int:
     return max_hr - resting_hr
@@ -36,6 +36,7 @@ def calculate_calories(
 
 # ── HRR tests ───────────────────────────────────────────────────────────────
 
+
 class TestHeartRateReserve:
     def test_hrr_is_difference_of_max_and_resting(self) -> None:
         assert calculate_hrr(max_hr=185, resting_hr=55) == 130
@@ -45,6 +46,7 @@ class TestHeartRateReserve:
 
 
 # ── Intensity tests ──────────────────────────────────────────────────────────
+
 
 class TestIntensity:
     def test_intensity_at_max_effort_is_one(self) -> None:
@@ -68,9 +70,10 @@ class TestIntensity:
 
 # ── Full calorie calculation ─────────────────────────────────────────────────
 
+
 class TestCalorieCalculation:
     """
-    Reference values computed manually from the formula in Plan_für_die_Featureimplementation.md:
+    Reference values computed manually:
         HRR = max_hr - resting_hr
         intensity = (avg_hr - resting_hr) / HRR
         kcal/min = intensity * (BMR / 1440) * activity_factor
@@ -111,6 +114,7 @@ class TestCalorieCalculation:
 
 # ── Keytel (2005) formula ────────────────────────────────────────────────────
 
+
 def calculate_calories_keytel(
     avg_hr: int,
     weight_kg: float,
@@ -119,24 +123,26 @@ def calculate_calories_keytel(
     duration_minutes: int,
 ) -> float:
     if sex_male:
-        kcal_per_min = (0.6309 * avg_hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969) / 4.184
+        kcal_per_min = (
+            0.6309 * avg_hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969
+        ) / 4.184
     else:
-        kcal_per_min = (0.4472 * avg_hr - 0.1263 * weight_kg + 0.074 * age - 20.4022) / 4.184
+        kcal_per_min = (
+            0.4472 * avg_hr - 0.1263 * weight_kg + 0.074 * age - 20.4022
+        ) / 4.184
     return round(max(kcal_per_min, 0.0) * duration_minutes, 1)
 
 
 class TestKeytelFormula:
     """
-    Reference values verified by hand against the Keytel 2005 paper coefficients.
+    Reference values verified by hand against Keytel 2005 coefficients.
     Male:   (0.6309·HR + 0.1988·W + 0.2017·age − 55.0969) / 4.184
     Female: (0.4472·HR − 0.1263·W + 0.074·age  − 20.4022) / 4.184
     """
 
     def test_typical_male_60min(self) -> None:
         # avg HR 140, 91 kg, age 30, male, 60 min
-        # kcal/min = (0.6309*140 + 0.1988*91 + 0.2017*30 - 55.0969) / 4.184
-        #          = (88.326 + 18.091 + 6.051 - 55.0969) / 4.184
-        #          = 57.371 / 4.184 ≈ 13.71  → ×60 ≈ 822.5
+        # kcal/min ≈ 13.71 → ×60 ≈ 822.5
         result = calculate_calories_keytel(140, 91.0, 30, True, 60)
         assert result == pytest.approx(822.5, rel=0.01)
 
@@ -151,6 +157,12 @@ class TestKeytelFormula:
         assert full == pytest.approx(half * 2, rel=0.01)
 
     def test_negative_kcal_per_min_is_clamped_to_zero(self) -> None:
-        # Very low HR for a male could produce negative raw value → should be 0
-        result = calculate_calories_keytel(avg_hr=50, weight_kg=50.0, age=20, sex_male=True, duration_minutes=30)
+        # Very low HR could produce negative raw value → should be ≥0
+        result = calculate_calories_keytel(
+            avg_hr=50,
+            weight_kg=50.0,
+            age=20,
+            sex_male=True,
+            duration_minutes=30,
+        )
         assert result >= 0.0
