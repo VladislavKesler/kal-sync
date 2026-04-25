@@ -1,4 +1,4 @@
-﻿using kal_sync.Views;
+using kal_sync.Views;
 using kal_sync.ViewModels;
 using kal_sync.Services;
 using Microsoft.Maui.Controls.Hosting;
@@ -20,10 +20,18 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        // Register Services (NICHT .Services!)
+        // ── Services ────────────────────────────────────────────────────────
         builder.Services.AddSingleton<GarminApiService>();
+        builder.Services.AddSingleton<UserProfileService>();
+        builder.Services.AddSingleton<GaintainingService>();
+
+        // ── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomeViewModel>();
+        builder.Services.AddSingleton<SettingsViewModel>();
+
+        // ── Views ───────────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomePage>();
+        builder.Services.AddSingleton<SettingsPage>();
 
         return builder.Build();
     }

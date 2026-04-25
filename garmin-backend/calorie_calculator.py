@@ -44,3 +44,30 @@ def get_activity_factor(activity_type: ActivityType | None) -> float:
     if activity_type is None:
         return _DEFAULT_FACTOR
     return _ACTIVITY_FACTORS.get(activity_type, _DEFAULT_FACTOR)
+
+
+# ── Keytel (2005) formula ────────────────────────────────────────────────────
+# Source: Keytel et al., "Prediction of energy expenditure from heart rate
+# monitoring during submaximal exercise", J Sports Sci, 2005.
+#
+# Male:   kcal/min = (0.6309·HR + 0.1988·W + 0.2017·age − 55.0969) / 4.184
+# Female: kcal/min = (0.4472·HR − 0.1263·W + 0.074·age  − 20.4022) / 4.184
+
+
+def calculate_calories_keytel(
+    avg_hr: int,
+    weight_kg: float,
+    age: int,
+    sex_male: bool,
+    duration_minutes: int,
+) -> float:
+    """Return total kcal using the Keytel (2005) heart-rate formula."""
+    if sex_male:
+        kcal_per_min = (
+            0.6309 * avg_hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969
+        ) / 4.184
+    else:
+        kcal_per_min = (
+            0.4472 * avg_hr - 0.1263 * weight_kg + 0.074 * age - 20.4022
+        ) / 4.184
+    return round(max(kcal_per_min, 0.0) * duration_minutes, 1)

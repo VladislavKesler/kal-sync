@@ -10,6 +10,11 @@
             Title="Home"
             ContentTemplate="{DataTemplate local:HomePage}"
             Route="HomePage" />
+
+        <ShellContent
+            Title="Settings"
+            ContentTemplate="{DataTemplate local:SettingsPage}"
+            Route="SettingsPage" />
     </TabBar>
 
 </Shell>

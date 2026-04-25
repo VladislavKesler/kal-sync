@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using kal_sync.Models;
@@ -43,18 +41,26 @@ public class GarminApiService
     }
 
     /// <summary>
-    /// Fetch latest activity from backend
+    /// Fetch latest activity from backend.
+    /// When a <paramref name="profile"/> is provided the backend uses the
+    /// Keytel (2005) formula instead of the default HRR formula.
     /// </summary>
-    /// <returns>ActivityResponse with calculated calories</returns>
-    public async Task<ActivityResponse?> GetLatestActivityAsync()
+    public async Task<ActivityResponse?> GetLatestActivityAsync(UserProfile? profile = null)
     {
         try
         {
-            Debug.WriteLine($"[GarminApiService] Calling {_apiBaseUrl}/api/activities/latest");
+            var url = $"{_apiBaseUrl}/api/activities/latest";
 
-            var response = await _httpClient.GetAsync(
-                $"{_apiBaseUrl}/api/activities/latest"
-            );
+            if (profile != null)
+            {
+                var w = profile.WeightKg.ToString("F1", CultureInfo.InvariantCulture);
+                var sex = (int)profile.Sex;
+                url += $"?weight_kg={w}&age={profile.Age}&sex={sex}";
+            }
+
+            Debug.WriteLine($"[GarminApiService] Calling {url}");
+
+            var response = await _httpClient.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
             {

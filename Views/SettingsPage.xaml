@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="kal_sync.Views.SettingsPage"
+             Title="Settings"
+             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <!-- ── Profile Card ─────────────────────────────────────────── -->
+            <Border Stroke="Gray" StrokeThickness="1" Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2D2D2D}">
+                <VerticalStackLayout Spacing="14">
+
+                    <Label Text="👤 Körperprofil"
+                           FontAttributes="Bold"
+                           FontSize="18" />
+
+                    <!-- Weight -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="auto,auto" RowSpacing="4" ColumnSpacing="10">
+                        <Label Text="Körpergewicht (kg)"
+                               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               FontSize="13" TextColor="Gray" />
+                        <Entry Text="{Binding WeightKg, StringFormat='{0:F1}'}"
+                               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                               Keyboard="Numeric"
+                               Placeholder="z. B. 91.0"
+                               FontSize="16" />
+                    </Grid>
+
+                    <!-- Body Fat -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="auto,auto" RowSpacing="4" ColumnSpacing="10">
+                        <Label Text="Körperfettanteil (%)"
+                               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               FontSize="13" TextColor="Gray" />
+                        <Entry Text="{Binding BodyFatPercent, StringFormat='{0:F1}'}"
+                               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                               Keyboard="Numeric"
+                               Placeholder="z. B. 20.0"
+                               FontSize="16" />
+                    </Grid>
+
+                    <!-- Age -->
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="auto,auto" RowSpacing="4" ColumnSpacing="10">
+                        <Label Text="Alter (Jahre)"
+                               Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                               FontSize="13" TextColor="Gray" />
+                        <Entry Text="{Binding Age}"
+                               Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                               Keyboard="Numeric"
+                               Placeholder="z. B. 30"
+                               FontSize="16" />
+                    </Grid>
+
+                    <!-- Sex -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Geschlecht"
+                               FontSize="13" TextColor="Gray" />
+                        <Picker ItemsSource="{Binding SexOptions}"
+                                SelectedItem="{Binding SelectedSex}"
+                                FontSize="16" />
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── BMR Result Card ──────────────────────────────────────── -->
+            <Border Stroke="Green" StrokeThickness="1" Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=#F0FFF0, Dark=#1A2E1A}">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="🔥 Berechnetes BMR (Katch-McArdle)"
+                           FontAttributes="Bold"
+                           FontSize="16" />
+
+                    <Label Text="{Binding CalculatedBmr, StringFormat='{0:F0} kcal / Tag'}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           TextColor="Green"
+                           HorizontalTextAlignment="Center" />
+
+                    <Label Text="Grundumsatz ohne Aktivität"
+                           FontSize="12"
+                           TextColor="Gray"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── Caloric Target Card ──────────────────────────────────── -->
+            <Border Stroke="Orange" StrokeThickness="1" Padding="16"
+                    BackgroundColor="{AppThemeBinding Light=#FFF5E5, Dark=#2E1F0A}">
+                <VerticalStackLayout Spacing="10">
+
+                    <Label Text="🎯 Kalorienziel"
+                           FontAttributes="Bold"
+                           FontSize="18" />
+
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Kalorienüberschuss (%)"
+                               FontSize="13" TextColor="Gray" />
+                        <Entry Text="{Binding SurplusPercent, StringFormat='{0:F1}'}"
+                               Keyboard="Numeric"
+                               Placeholder="z. B. 5.0"
+                               FontSize="16" />
+                        <Label Text="Empfehlung für Lean Bulk: 3–7 %"
+                               FontSize="11" TextColor="Gray" />
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- ── Save Button ──────────────────────────────────────────── -->
+            <Button Text="💾 Speichern"
+                    Command="{Binding SaveCommand}"
+                    BackgroundColor="Blue"
+                    TextColor="White"
+                    Padding="20"
+                    FontSize="16"
+                    CornerRadius="8" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
