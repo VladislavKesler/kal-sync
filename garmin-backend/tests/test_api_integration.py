@@ -12,20 +12,7 @@ import pytest
 from unittest.mock import AsyncMock, patch
 from httpx import AsyncClient, ASGITransport
 
-# Once main.py exists, uncomment:
-# from main import app
-# from models import ActivityResponse, ZoneData
-
-# ── Placeholder app for demonstration ───────────────────────────────────────
-# Remove this block once main.py is implemented.
-from fastapi import FastAPI
-
-app = FastAPI()
-
-
-@app.get("/api/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+from main import app  # noqa: F401  (re-exported for tests)
 
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
