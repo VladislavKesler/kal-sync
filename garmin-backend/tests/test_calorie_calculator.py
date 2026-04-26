@@ -7,32 +7,12 @@ They run in milliseconds and should always pass in CI.
 
 import pytest
 
-# ── Helpers (mirror what calorie_calculator.py will implement) ──────────────
-# Once calorie_calculator.py exists, replace these with:
-#   from calorie_calculator import calculate_calories, ActivityType
-
-
-def calculate_hrr(max_hr: int, resting_hr: int) -> int:
-    return max_hr - resting_hr
-
-
-def calculate_intensity(avg_hr: int, resting_hr: int, hrr: int) -> float:
-    return (avg_hr - resting_hr) / hrr
-
-
-def calculate_calories(
-    avg_hr: int,
-    max_hr: int,
-    resting_hr: int,
-    duration_minutes: int,
-    bmr_kcal: float,
-    activity_factor: float,
-) -> float:
-    hrr = calculate_hrr(max_hr, resting_hr)
-    intensity = calculate_intensity(avg_hr, resting_hr, hrr)
-    kcal_per_min = intensity * (bmr_kcal / 1440) * activity_factor
-    return kcal_per_min * duration_minutes
-
+from calorie_calculator import (
+    calculate_calories,
+    calculate_calories_keytel,
+    calculate_hrr,
+    calculate_intensity,
+)
 
 # ── HRR tests ───────────────────────────────────────────────────────────────
 
@@ -83,8 +63,7 @@ class TestCalorieCalculation:
     def test_zone2_cardio_session(self) -> None:
         # Typical Zone 2 session: 60 min, avg HR 130, max 185, resting 55
         # HRR = 130, intensity = 75/130 ≈ 0.577
-        # kcal/min = 0.577 * (1942/1440) * 1.2 ≈ 0.936
-        # total ≈ 56.1 kcal
+        # kcal/min ≈ 0.933 → total ≈ 56.0 kcal
         result = calculate_calories(
             avg_hr=130,
             max_hr=185,
@@ -93,7 +72,7 @@ class TestCalorieCalculation:
             bmr_kcal=1942.0,
             activity_factor=1.2,
         )
-        assert result == pytest.approx(56.1, rel=0.01)
+        assert result == pytest.approx(56.0, rel=0.01)
 
     def test_hiit_session_burns_more_than_zone2(self) -> None:
         # Same duration, higher intensity (avg HR 160) and higher factor (1.8)
@@ -113,24 +92,6 @@ class TestCalorieCalculation:
 
 
 # ── Keytel (2005) formula ────────────────────────────────────────────────────
-
-
-def calculate_calories_keytel(
-    avg_hr: int,
-    weight_kg: float,
-    age: int,
-    sex_male: bool,
-    duration_minutes: int,
-) -> float:
-    if sex_male:
-        kcal_per_min = (
-            0.6309 * avg_hr + 0.1988 * weight_kg + 0.2017 * age - 55.0969
-        ) / 4.184
-    else:
-        kcal_per_min = (
-            0.4472 * avg_hr - 0.1263 * weight_kg + 0.074 * age - 20.4022
-        ) / 4.184
-    return round(max(kcal_per_min, 0.0) * duration_minutes, 1)
 
 
 class TestKeytelFormula:

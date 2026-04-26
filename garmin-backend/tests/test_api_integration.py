@@ -1,11 +1,11 @@
 """
-Integration tests for the FastAPI backend.
+API tests for the FastAPI backend.
 
-These tests spin up the full FastAPI app in-process using httpx's AsyncClient.
-They do NOT call the real Garmin API — the GarminService is mocked.
+Tests spin up the full FastAPI app in-process using httpx's AsyncClient.
+The GarminService is always mocked — no real Garmin credentials required.
 
-Marked with @pytest.mark.integration so they can be run separately:
-    pytest -m integration
+Tests that need the REAL Garmin API are kept with @pytest.mark.integration
+and are excluded from the default CI run.
 """
 
 from typing import Any
@@ -18,18 +18,19 @@ from main import app  # noqa: F401  (re-exported for tests)
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 
+_STATS_PAYLOAD: dict[str, Any] = {"resting_hr": 55}
+
 
 @pytest.fixture
 def mock_activity() -> dict[str, Any]:
-    """A realistic ActivityResponse payload for mocking."""
+    """A realistic activity payload for mocking GarminService."""
     return {
         "activity_date": "2024-10-15",
         "duration_minutes": 60,
         "avg_hr": 130,
         "max_hr": 185,
         "garmin_calories": 520.0,
-        "calculated_calories": 487.0,
-        "difference": -33.0,
+        "activity_type": "zone2_cycling",
         "zones": {
             "zone1_minutes": 5,
             "zone2_minutes": 35,
@@ -43,7 +44,6 @@ def mock_activity() -> dict[str, Any]:
 # ── Health endpoint ───────────────────────────────────────────────────────────
 
 
-@pytest.mark.integration
 async def test_health_endpoint_returns_200() -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -53,7 +53,6 @@ async def test_health_endpoint_returns_200() -> None:
     assert response.status_code == 200
 
 
-@pytest.mark.integration
 async def test_health_endpoint_returns_ok_status() -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -66,22 +65,27 @@ async def test_health_endpoint_returns_ok_status() -> None:
 # ── Activity endpoint ─────────────────────────────────────────────────────────
 
 
-@pytest.mark.integration
 async def test_latest_activity_returns_200(mock_activity: dict[str, Any]) -> None:
-    with patch(
-        "main.garmin_service.get_latest_activity",
-        new_callable=AsyncMock,
-        return_value=mock_activity,
+    with (
+        patch(
+            "main.garmin_service.get_user_stats",
+            new_callable=AsyncMock,
+            return_value=_STATS_PAYLOAD,
+        ),
+        patch(
+            "main.garmin_service.get_latest_activity",
+            new_callable=AsyncMock,
+            return_value=mock_activity,
+        ),
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.get("/api/activities/latest")
 
-    assert response.status_code in (200, 404)
+    assert response.status_code == 200
 
 
-@pytest.mark.integration
 async def test_latest_activity_response_shape(
     mock_activity: dict[str, Any],
 ) -> None:
@@ -97,28 +101,32 @@ async def test_latest_activity_response_shape(
         "zones",
     }
 
-    with patch(
-        "main.garmin_service.get_latest_activity",
-        new_callable=AsyncMock,
-        return_value=mock_activity,
+    with (
+        patch(
+            "main.garmin_service.get_user_stats",
+            new_callable=AsyncMock,
+            return_value=_STATS_PAYLOAD,
+        ),
+        patch(
+            "main.garmin_service.get_latest_activity",
+            new_callable=AsyncMock,
+            return_value=mock_activity,
+        ),
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
             response = await client.get("/api/activities/latest")
 
-    if response.status_code == 200:
-        assert required_fields.issubset(response.json().keys())
+    assert response.status_code == 200
+    assert required_fields.issubset(response.json().keys())
 
 
-@pytest.mark.integration
 async def test_keytel_formula_used_when_profile_params_provided(
     mock_activity: dict[str, Any],
 ) -> None:
     """When weight_kg, age and sex are passed the Keytel formula is used;
     the calculated_calories value must differ from the HRR-formula default."""
-    stats_payload: dict[str, Any] = {"resting_hr": 55}
-
     with (
         patch(
             "main.garmin_service.get_latest_activity",
@@ -128,7 +136,7 @@ async def test_keytel_formula_used_when_profile_params_provided(
         patch(
             "main.garmin_service.get_user_stats",
             new_callable=AsyncMock,
-            return_value=stats_payload,
+            return_value=_STATS_PAYLOAD,
         ),
     ):
         async with AsyncClient(
@@ -139,19 +147,17 @@ async def test_keytel_formula_used_when_profile_params_provided(
                 "/api/activities/latest?weight_kg=91.0&age=30&sex=0"
             )
 
-    if resp_default.status_code == 200 and resp_keytel.status_code == 200:
-        default_kcal = resp_default.json()["calculated_calories"]
-        keytel_kcal = resp_keytel.json()["calculated_calories"]
-        assert default_kcal != keytel_kcal
+    assert resp_default.status_code == 200
+    assert resp_keytel.status_code == 200
+    default_kcal = resp_default.json()["calculated_calories"]
+    keytel_kcal = resp_keytel.json()["calculated_calories"]
+    assert default_kcal != keytel_kcal
 
 
-@pytest.mark.integration
 async def test_keytel_partial_params_fall_back_to_hrr(
     mock_activity: dict[str, Any],
 ) -> None:
     """Providing only weight_kg without age/sex must fall back to HRR (no 422)."""
-    stats_payload: dict[str, Any] = {"resting_hr": 55}
-
     with (
         patch(
             "main.garmin_service.get_latest_activity",
@@ -161,7 +167,7 @@ async def test_keytel_partial_params_fall_back_to_hrr(
         patch(
             "main.garmin_service.get_user_stats",
             new_callable=AsyncMock,
-            return_value=stats_payload,
+            return_value=_STATS_PAYLOAD,
         ),
     ):
         async with AsyncClient(
@@ -169,4 +175,4 @@ async def test_keytel_partial_params_fall_back_to_hrr(
         ) as client:
             response = await client.get("/api/activities/latest?weight_kg=91.0")
 
-    assert response.status_code in (200, 404)  # not 422
+    assert response.status_code == 200  # not 422
