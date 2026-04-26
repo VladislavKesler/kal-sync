@@ -2,11 +2,11 @@
 name = "garmin-backend"
 version = "0.1.0"
 description = "Garmin calorie calculator backend for kal-sync"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 
 # ─── Ruff (Linter + Formatter) ───────────────────────────────────────────────
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 88
 
 [tool.ruff.lint]
@@ -36,7 +36,7 @@ line-ending = "lf"
 
 # ─── Mypy (Type Checker) ─────────────────────────────────────────────────────
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -51,6 +51,7 @@ ignore_missing_imports = true  # No type stubs available for this library
 [tool.pytest.ini_options]
 asyncio_mode = "auto"          # auto-detect async tests (pytest-asyncio)
 testpaths = ["tests"]
+pythonpath = ["."]             # add garmin-backend/ to sys.path so "from main import app" works
 markers = [
     "integration: marks tests that require the full app running (deselect with '-m not integration')",
     "unit: marks pure unit tests with no external dependencies",
