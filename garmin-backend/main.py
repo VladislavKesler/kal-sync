@@ -1,21 +1,15 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from calorie_calculator import (
-    ActivityType,
-    calculate_calories,
-    calculate_calories_keytel,
-    get_activity_factor,
-)
 from garmin_service import GarminService
 from models import ActivityResponse, ZoneData
 
 load_dotenv()
 
-app = FastAPI(title="Garmin Calorie Calculator", version="0.2.0")
+app = FastAPI(title="Garmin Calorie Calculator", version="0.3.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,9 +18,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# BMR fallback — used only when the MAUI app has not yet saved a user profile.
-BMR_KCAL = float(os.getenv("BMR_KCAL", "1942"))
 
 garmin_service = GarminService(
     email=os.getenv("GARMIN_EMAIL", ""),
@@ -40,11 +31,7 @@ async def health_check() -> dict[str, str]:
 
 
 @app.get("/api/activities/latest", response_model=ActivityResponse)
-async def get_latest_activity(
-    weight_kg: float | None = Query(default=None, description="kg (Keytel)"),
-    age: int | None = Query(default=None, description="years (Keytel)"),
-    sex: int | None = Query(default=None, description="0=male 1=female (Keytel)"),
-) -> ActivityResponse:
+async def get_latest_activity() -> ActivityResponse:
     try:
         stats = await garmin_service.get_user_stats()
         activity = await garmin_service.get_latest_activity()
@@ -53,42 +40,17 @@ async def get_latest_activity(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Garmin API error: {exc}") from exc
 
-    resting_hr = stats["resting_hr"]
-
-    # ── Choose formula ───────────────────────────────────────────────────────
-    # Keytel (2005) when all three body-composition params are supplied;
-    # otherwise fall back to the HRR / intensity formula with env BMR.
-    if weight_kg is not None and age is not None and sex is not None:
-        calculated = calculate_calories_keytel(
-            avg_hr=activity["avg_hr"],
-            weight_kg=weight_kg,
-            age=age,
-            sex_male=(sex == 0),
-            duration_minutes=activity["duration_minutes"],
-        )
-    else:
-        try:
-            activity_type = ActivityType(activity.get("activity_type", "strength"))
-        except ValueError:
-            activity_type = ActivityType.STRENGTH
-
-        factor = get_activity_factor(activity_type)
-        calculated = calculate_calories(
-            avg_hr=activity["avg_hr"],
-            max_hr=activity["max_hr"],
-            resting_hr=resting_hr,
-            duration_minutes=activity["duration_minutes"],
-            bmr_kcal=BMR_KCAL,
-            activity_factor=factor,
-        )
+    # Use Garmin's own daily active-calorie tracking (all movement above BMR).
+    active_calories = float(stats["active_calories"])
+    garmin_calories = float(activity["garmin_calories"])
 
     return ActivityResponse(
         activity_date=activity["activity_date"],
         duration_minutes=activity["duration_minutes"],
         avg_hr=activity["avg_hr"],
         max_hr=activity["max_hr"],
-        garmin_calories=activity["garmin_calories"],
-        calculated_calories=calculated,
-        difference=activity["garmin_calories"] - calculated,
+        garmin_calories=garmin_calories,
+        calculated_calories=active_calories,
+        difference=garmin_calories - active_calories,
         zones=ZoneData(**activity["zones"]),
     )

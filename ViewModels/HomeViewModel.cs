@@ -31,7 +31,13 @@ public partial class HomeViewModel : ObservableObject
     private double _targetKcal;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     private double _surplusPercent;
+
+    /// <summary>Shows "Überschuss" or "Defizit" depending on the sign of SurplusPercent.</summary>
+    public string SurplusLabel => SurplusPercent >= 0
+        ? $"inkl. {SurplusPercent:F1} % Überschuss"
+        : $"inkl. {Math.Abs(SurplusPercent):F1} % Defizit";
 
     // ── State ────────────────────────────────────────────────────────────────
 
@@ -62,7 +68,7 @@ public partial class HomeViewModel : ObservableObject
             Debug.WriteLine("[HomeViewModel] Loading calorie dashboard...");
 
             var profile = _userProfileService.Load();
-            var activity = await _apiService.GetLatestActivityAsync(profile);
+            var activity = await _apiService.GetLatestActivityAsync();
 
             if (activity != null)
             {

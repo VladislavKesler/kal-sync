@@ -65,27 +65,6 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- ── BMR Result Card ──────────────────────────────────────── -->
-            <Border Stroke="Green" StrokeThickness="1" Padding="16"
-                    BackgroundColor="{AppThemeBinding Light=#F0FFF0, Dark=#1A2E1A}">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="🔥 Berechnetes BMR (Katch-McArdle)"
-                           FontAttributes="Bold"
-                           FontSize="16" />
-
-                    <Label Text="{Binding CalculatedBmr, StringFormat='{0:F0} kcal / Tag'}"
-                           FontSize="28"
-                           FontAttributes="Bold"
-                           TextColor="Green"
-                           HorizontalTextAlignment="Center" />
-
-                    <Label Text="Grundumsatz ohne Aktivität"
-                           FontSize="12"
-                           TextColor="Gray"
-                           HorizontalTextAlignment="Center" />
-                </VerticalStackLayout>
-            </Border>
-
             <!-- ── Caloric Target Card ──────────────────────────────────── -->
             <Border Stroke="Orange" StrokeThickness="1" Padding="16"
                     BackgroundColor="{AppThemeBinding Light=#FFF5E5, Dark=#2E1F0A}">
@@ -96,13 +75,13 @@
                            FontSize="18" />
 
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="Kalorienüberschuss (%)"
+                        <Label Text="Kalorienanpassung (%)"
                                FontSize="13" TextColor="Gray" />
                         <Entry Text="{Binding SurplusPercent, StringFormat='{0:F1}'}"
                                Keyboard="Numeric"
-                               Placeholder="z. B. 5.0"
+                               Placeholder="z. B. 5.0 oder -5.0"
                                FontSize="16" />
-                        <Label Text="Empfehlung für Lean Bulk: 3–7 %"
+                        <Label Text="Lean Bulk: +3–7 %  |  Defizit: negativer Wert"
                                FontSize="11" TextColor="Gray" />
                     </VerticalStackLayout>
 

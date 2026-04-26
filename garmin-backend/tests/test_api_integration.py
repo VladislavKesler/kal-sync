@@ -3,9 +3,6 @@ API tests for the FastAPI backend.
 
 Tests spin up the full FastAPI app in-process using httpx's AsyncClient.
 The GarminService is always mocked — no real Garmin credentials required.
-
-Tests that need the REAL Garmin API are kept with @pytest.mark.integration
-and are excluded from the default CI run.
 """
 
 from typing import Any
@@ -18,7 +15,10 @@ from main import app  # noqa: F401  (re-exported for tests)
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
 
-_STATS_PAYLOAD: dict[str, Any] = {"resting_hr": 55}
+_STATS_PAYLOAD: dict[str, Any] = {
+    "resting_hr": 55,
+    "active_calories": 450,
+}
 
 
 @pytest.fixture
@@ -86,6 +86,31 @@ async def test_latest_activity_returns_200(mock_activity: dict[str, Any]) -> Non
     assert response.status_code == 200
 
 
+async def test_latest_activity_uses_garmin_active_calories(
+    mock_activity: dict[str, Any],
+) -> None:
+    """calculated_calories in the response must equal today's Garmin active calories."""
+    with (
+        patch(
+            "main.garmin_service.get_user_stats",
+            new_callable=AsyncMock,
+            return_value=_STATS_PAYLOAD,
+        ),
+        patch(
+            "main.garmin_service.get_latest_activity",
+            new_callable=AsyncMock,
+            return_value=mock_activity,
+        ),
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.get("/api/activities/latest")
+
+    assert response.status_code == 200
+    assert response.json()["calculated_calories"] == pytest.approx(450.0)
+
+
 async def test_latest_activity_response_shape(
     mock_activity: dict[str, Any],
 ) -> None:
@@ -120,59 +145,3 @@ async def test_latest_activity_response_shape(
 
     assert response.status_code == 200
     assert required_fields.issubset(response.json().keys())
-
-
-async def test_keytel_formula_used_when_profile_params_provided(
-    mock_activity: dict[str, Any],
-) -> None:
-    """When weight_kg, age and sex are passed the Keytel formula is used;
-    the calculated_calories value must differ from the HRR-formula default."""
-    with (
-        patch(
-            "main.garmin_service.get_latest_activity",
-            new_callable=AsyncMock,
-            return_value=mock_activity,
-        ),
-        patch(
-            "main.garmin_service.get_user_stats",
-            new_callable=AsyncMock,
-            return_value=_STATS_PAYLOAD,
-        ),
-    ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            resp_default = await client.get("/api/activities/latest")
-            resp_keytel = await client.get(
-                "/api/activities/latest?weight_kg=91.0&age=30&sex=0"
-            )
-
-    assert resp_default.status_code == 200
-    assert resp_keytel.status_code == 200
-    default_kcal = resp_default.json()["calculated_calories"]
-    keytel_kcal = resp_keytel.json()["calculated_calories"]
-    assert default_kcal != keytel_kcal
-
-
-async def test_keytel_partial_params_fall_back_to_hrr(
-    mock_activity: dict[str, Any],
-) -> None:
-    """Providing only weight_kg without age/sex must fall back to HRR (no 422)."""
-    with (
-        patch(
-            "main.garmin_service.get_latest_activity",
-            new_callable=AsyncMock,
-            return_value=mock_activity,
-        ),
-        patch(
-            "main.garmin_service.get_user_stats",
-            new_callable=AsyncMock,
-            return_value=_STATS_PAYLOAD,
-        ),
-    ):
-        async with AsyncClient(
-            transport=ASGITransport(app=app), base_url="http://test"
-        ) as client:
-            response = await client.get("/api/activities/latest?weight_kg=91.0")
-
-    assert response.status_code == 200  # not 422

@@ -123,7 +123,7 @@
                                FontSize="36"
                                TextColor="Green"
                                HorizontalTextAlignment="Center" />
-                        <Label Text="{Binding SurplusPercent, StringFormat='inkl. {0:F1} % Überschuss'}"
+                        <Label Text="{Binding SurplusLabel}"
                                FontSize="12"
                                TextColor="Gray"
                                HorizontalTextAlignment="Center" />
