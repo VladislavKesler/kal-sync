@@ -3,22 +3,37 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using kal_sync.Models;
 using kal_sync.Services;
 
 namespace kal_sync.ViewModels;
 
 /// <summary>
 /// ViewModel for HomePage.
-/// Handles activity data loading and state management.
+/// Displays the calorie dashboard: BMR, active calories, TDEE and calorie target.
 /// </summary>
 public partial class HomeViewModel : ObservableObject
 {
     private readonly GarminApiService _apiService;
     private readonly UserProfileService _userProfileService;
 
+    // ── Calorie dashboard ────────────────────────────────────────────────────
+
     [ObservableProperty]
-    private ActivityResponse? _currentActivity;
+    private double _bmr;
+
+    [ObservableProperty]
+    private double _activeCalories;
+
+    [ObservableProperty]
+    private double _tdee;
+
+    [ObservableProperty]
+    private double _targetKcal;
+
+    [ObservableProperty]
+    private double _surplusPercent;
+
+    // ── State ────────────────────────────────────────────────────────────────
 
     [ObservableProperty]
     private bool _isLoading;
@@ -27,18 +42,15 @@ public partial class HomeViewModel : ObservableObject
     private string? _errorMessage;
 
     [ObservableProperty]
-    private bool _hasActivity;
+    private bool _hasData;
 
     public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService)
     {
         _apiService = apiService;
         _userProfileService = userProfileService;
-        _hasActivity = false;
-        _isLoading = false;
-        _errorMessage = null;
     }
 
-    /// <summary>Load latest activity from backend, using the saved user profile for the formula.</summary>
+    /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
     [RelayCommand]
     public async Task LoadLatestActivity()
     {
@@ -47,20 +59,32 @@ public partial class HomeViewModel : ObservableObject
 
         try
         {
-            Debug.WriteLine("[HomeViewModel] Loading latest activity...");
+            Debug.WriteLine("[HomeViewModel] Loading calorie dashboard...");
 
             var profile = _userProfileService.Load();
-            CurrentActivity = await _apiService.GetLatestActivityAsync(profile);
-            HasActivity = CurrentActivity != null;
-            ErrorMessage = null;
+            var activity = await _apiService.GetLatestActivityAsync(profile);
 
-            Debug.WriteLine($"[HomeViewModel] Activity loaded: {CurrentActivity?.ActivityDate}");
+            if (activity != null)
+            {
+                Bmr = Math.Round(_userProfileService.GetBmr(profile), 0);
+                ActiveCalories = activity.CalculatedCalories;
+                Tdee = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
+                SurplusPercent = profile.SurplusPercent;
+                TargetKcal = GaintainingService.CalculateTargetKcal(Tdee, SurplusPercent);
+                HasData = true;
+            }
+            else
+            {
+                HasData = false;
+            }
+
+            Debug.WriteLine($"[HomeViewModel] BMR={Bmr}, ActiveCal={ActiveCalories}, TDEE={Tdee}, Target={TargetKcal}");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"[HomeViewModel] Error: {ex.Message}");
             ErrorMessage = $"Fehler beim Laden: {ex.Message}";
-            HasActivity = false;
+            HasData = false;
         }
         finally
         {
@@ -75,7 +99,7 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     public async Task PageAppearing()
     {
-        if (!HasActivity)
+        if (!HasData)
         {
             await LoadLatestActivity();
         }
