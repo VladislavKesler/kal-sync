@@ -21,8 +21,12 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CalculatedBmr))]
     private double _bodyFatPercent;
 
+    /// <summary>
+    /// Age exposed as double so it binds without type coercion issues to Stepper.Value (double).
+    /// Cast to int is applied in Save().
+    /// </summary>
     [ObservableProperty]
-    private int _age;
+    private double _ageDouble;
 
     [ObservableProperty]
     private string _selectedSex = "Male";
@@ -56,10 +60,10 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadProfile()
     {
-        var p = _profileService.Load();
-        WeightKg = p.WeightKg;
+        var p      = _profileService.Load();
+        WeightKg   = p.WeightKg;
         BodyFatPercent = p.BodyFatPercent;
-        Age = p.Age;
+        AgeDouble  = p.Age;
         SelectedSex = p.Sex == Sex.Female ? "Female" : "Male";
         SurplusPercent = p.SurplusPercent;
     }
@@ -71,10 +75,10 @@ public partial class SettingsViewModel : ObservableObject
     {
         _profileService.Save(new UserProfile
         {
-            WeightKg = WeightKg,
+            WeightKg       = WeightKg,
             BodyFatPercent = BodyFatPercent,
-            Age = Age,
-            Sex = SelectedSex == "Female" ? Sex.Female : Sex.Male,
+            Age            = (int)Math.Round(AgeDouble),
+            Sex            = SelectedSex == "Female" ? Sex.Female : Sex.Male,
             SurplusPercent = SurplusPercent,
         });
     }

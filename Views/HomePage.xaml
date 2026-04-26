@@ -1,149 +1,297 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:kal_sync.ViewModels"
+             xmlns:conv="clr-namespace:kal_sync.Converters"
+             xmlns:views="clr-namespace:kal_sync.Views"
              x:Class="kal_sync.Views.HomePage"
-             Title="kal-sync"
-             BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1E1E1E}">
+             x:DataType="vm:HomeViewModel"
+             Title="Home"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="16">
+    <!--
+    ═══════════════════════════════════════════════════════════════════
+      HomePage · calorie dashboard
+      ViewModel: HomeViewModel
+        Bmr, ActiveCalories, Tdee, TargetKcal, SurplusPercent,
+        SurplusLabel, TodayLabel, IsLoading, HasData, ErrorMessage,
+        Activity (ActivityResponse?),
+        RefreshDataCommand, PageAppearingCommand
+    ═══════════════════════════════════════════════════════════════════
+    -->
 
-            <!-- Loading Indicator -->
-            <ActivityIndicator
-                IsRunning="{Binding IsLoading}"
-                IsVisible="{Binding IsLoading}"
-                Color="Blue"
-                Scale="1.5" />
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Palette -->
+            <Color x:Key="Bg">#F7F8FA</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="SurfaceAlt">#EFF1F4</Color>
+            <Color x:Key="Ink">#1A1F2A</Color>
+            <Color x:Key="Muted">#6B7280</Color>
+            <Color x:Key="Hairline">#E2E5EA</Color>
+            <Color x:Key="Accent">#A8D86A</Color>
+            <Color x:Key="AccentInk">#3F6E1F</Color>
+            <Color x:Key="Danger">#C0533A</Color>
 
-            <!-- Error Message -->
-            <Label
-                Text="{Binding ErrorMessage}"
-                TextColor="Red"
-                FontSize="14"
-                IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullEmptyConverter}}"
-                Padding="10"
-                BackgroundColor="#FFE5E5" />
+            <!-- Typography -->
+            <x:String x:Key="MonoFont">JetBrainsMono</x:String>
+            <x:String x:Key="UiFont">Inter</x:String>
 
-            <!-- Empty State (no data, not loading) -->
-            <VerticalStackLayout
-                Spacing="10"
-                IsVisible="{Binding HasData, Converter={StaticResource InvertedBoolConverter}}"
-                VerticalOptions="Center"
-                HorizontalOptions="Center">
+            <Style x:Key="Eyebrow" TargetType="Label">
+                <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="CharacterSpacing" Value="3" />
+                <Setter Property="TextTransform" Value="Uppercase" />
+                <Setter Property="TextColor" Value="{StaticResource Muted}" />
+            </Style>
 
-                <Label
-                    Text="📊"
-                    FontSize="48"
-                    HorizontalTextAlignment="Center"
-                    IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            <Style x:Key="StatValue" TargetType="Label">
+                <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                <Setter Property="FontSize" Value="22" />
+                <Setter Property="TextColor" Value="{StaticResource Ink}" />
+            </Style>
 
-                <Label
-                    Text="Keine Daten geladen"
-                    FontSize="16"
-                    TextColor="Gray"
-                    HorizontalTextAlignment="Center"
-                    IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource Surface}" />
+                <Setter Property="Stroke" Value="{StaticResource Hairline}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape">
+                    <RoundRectangle CornerRadius="14" />
+                </Setter>
+            </Style>
 
-                <Label
-                    Text="Klick 'Neu laden' um Daten zu fetchen"
-                    FontSize="12"
-                    TextColor="LightGray"
-                    HorizontalTextAlignment="Center"
-                    IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
+            <!-- Converters -->
+            <conv:DoubleToIntStringConverter x:Key="IntStr" />
+            <conv:SurplusToColorConverter    x:Key="SurplusColor" />
+            <conv:InvertedBoolConverter      x:Key="Invert" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid BackgroundColor="{StaticResource Bg}" RowDefinitions="Auto,*,Auto">
+
+        <!-- ─────────────────────── Top bar ──────────────────────── -->
+        <Grid Grid.Row="0" Padding="20,14,20,10" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Style="{StaticResource Eyebrow}" Text="kal-sync · heute" />
+                <Label FontFamily="{StaticResource UiFont}"
+                       FontSize="19" FontAttributes="Bold"
+                       TextColor="{StaticResource Ink}"
+                       Text="{Binding TodayLabel}" />
             </VerticalStackLayout>
 
-            <!-- Dashboard Cards (visible when HasData) -->
-            <VerticalStackLayout IsVisible="{Binding HasData}" Spacing="16">
+            <Border Grid.Column="1" WidthRequest="36" HeightRequest="36"
+                    Background="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}" StrokeThickness="1">
+                <Border.StrokeShape><RoundRectangle CornerRadius="18" /></Border.StrokeShape>
+                <ImageButton Source="icon_refresh.png" HeightRequest="16" WidthRequest="16"
+                             BackgroundColor="Transparent"
+                             Command="{Binding RefreshDataCommand}" />
+            </Border>
+        </Grid>
 
-                <!-- Card 1: BMR (Gray) -->
-                <Border Stroke="Gray" StrokeThickness="1" Padding="16"
-                        BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#2D2D2D}">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="🔥 Grundumsatz (BMR)"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                        <Label Text="{Binding Bmr, StringFormat='{0:F0} kcal'}"
-                               FontAttributes="Bold"
-                               FontSize="36"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="Katch-McArdle Formel"
-                               FontSize="12"
-                               TextColor="Gray"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </Border>
+        <!-- ─────────────────────── Body ─────────────────────────── -->
+        <Grid Grid.Row="1">
 
-                <!-- Card 2: Aktivkalorien (Orange) -->
-                <Border Stroke="Orange" StrokeThickness="1" Padding="16"
-                        BackgroundColor="{AppThemeBinding Light=#FFF5E5, Dark=#2E1F0A}">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="⚡ Aktivkalorien"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                        <Label Text="{Binding ActiveCalories, StringFormat='{0:F0} kcal'}"
-                               FontAttributes="Bold"
-                               FontSize="36"
-                               TextColor="Orange"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="Letzte Aktivität (Keytel-Formel)"
-                               FontSize="12"
-                               TextColor="Gray"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </Border>
+            <!-- Empty state: shown when no data and not loading -->
+            <views:EmptyStateView
+                IsVisible="{Binding HasData, Converter={StaticResource Invert}}" />
 
-                <!-- Card 3: TDEE (Blue) -->
-                <Border Stroke="#0055AA" StrokeThickness="1" Padding="16"
-                        BackgroundColor="{AppThemeBinding Light=#EEF4FF, Dark=#0A1929}">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="📊 Gesamtkalorienbedarf (TDEE)"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                        <Label Text="{Binding Tdee, StringFormat='{0:F0} kcal'}"
-                               FontAttributes="Bold"
-                               FontSize="36"
-                               TextColor="#0055AA"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="BMR + Aktivkalorien"
-                               FontSize="12"
-                               TextColor="Gray"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </Border>
+            <!-- Main content: shown when HasData = true -->
+            <ScrollView IsVisible="{Binding HasData}" Padding="16,8,16,20">
+                <VerticalStackLayout Spacing="16">
 
-                <!-- Card 4: Kalorienziel (Green) -->
-                <Border Stroke="Green" StrokeThickness="1" Padding="16"
-                        BackgroundColor="{AppThemeBinding Light=#F0FFF0, Dark=#1A2E1A}">
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="🎯 Kalorienziel"
-                               FontAttributes="Bold"
-                               FontSize="16" />
-                        <Label Text="{Binding TargetKcal, StringFormat='{0:F0} kcal'}"
-                               FontAttributes="Bold"
-                               FontSize="36"
-                               TextColor="Green"
-                               HorizontalTextAlignment="Center" />
-                        <Label Text="{Binding SurplusLabel}"
-                               FontSize="12"
-                               TextColor="Gray"
-                               HorizontalTextAlignment="Center" />
-                    </VerticalStackLayout>
-                </Border>
+                    <!-- ── Hero card with target ring ───────────── -->
+                    <Border Style="{StaticResource Card}" Padding="16,24,16,18">
+                        <Border.StrokeShape><RoundRectangle CornerRadius="20" /></Border.StrokeShape>
+                        <VerticalStackLayout Spacing="18">
 
+                            <!-- Ring + center label stack -->
+                            <Grid HeightRequest="232" HorizontalOptions="Center">
+                                <GraphicsView x:Name="RingView"
+                                              WidthRequest="232" HeightRequest="232">
+                                    <GraphicsView.Drawable>
+                                        <conv:TargetRingDrawable x:Name="RingDrawable" />
+                                    </GraphicsView.Drawable>
+                                </GraphicsView>
+                                <VerticalStackLayout VerticalOptions="Center"
+                                                     HorizontalOptions="Center" Spacing="2">
+                                    <Label Style="{StaticResource Eyebrow}"
+                                           Text="Tagesziel" HorizontalOptions="Center" />
+                                    <Label FontFamily="{StaticResource MonoFont}"
+                                           FontSize="56" TextColor="{StaticResource Ink}"
+                                           HorizontalOptions="Center"
+                                           Text="{Binding TargetKcal, Converter={StaticResource IntStr}}" />
+                                    <Label FontSize="13" TextColor="{StaticResource Muted}"
+                                           Text="kcal" HorizontalOptions="Center" />
+                                    <Border Padding="8,3" Margin="0,8,0,0"
+                                            HorizontalOptions="Center"
+                                            Background="{Binding SurplusPercent,
+                                                         Converter={StaticResource SurplusColor},
+                                                         ConverterParameter=bg}">
+                                        <Border.StrokeShape>
+                                            <RoundRectangle CornerRadius="999" />
+                                        </Border.StrokeShape>
+                                        <Label FontSize="11"
+                                               TextColor="{Binding SurplusPercent,
+                                                           Converter={StaticResource SurplusColor},
+                                                           ConverterParameter=fg}"
+                                               Text="{Binding SurplusLabel}" />
+                                    </Border>
+                                </VerticalStackLayout>
+                            </Grid>
+
+                            <!-- BMR / TDEE / Aktiv strip -->
+                            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                            <Grid ColumnDefinitions="*,*,*">
+                                <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+                                    <Label Style="{StaticResource Eyebrow}" Text="BMR" HorizontalOptions="Center" />
+                                    <HorizontalStackLayout Spacing="3" HorizontalOptions="Center">
+                                        <Label Style="{StaticResource StatValue}" FontSize="16"
+                                               Text="{Binding Bmr, Converter={StaticResource IntStr}}" />
+                                        <Label FontSize="10" TextColor="{StaticResource Muted}"
+                                               VerticalOptions="End" Text="kcal" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                                    <Label Style="{StaticResource Eyebrow}" Text="TDEE" HorizontalOptions="Center" />
+                                    <HorizontalStackLayout Spacing="3" HorizontalOptions="Center">
+                                        <Label Style="{StaticResource StatValue}" FontSize="16"
+                                               Text="{Binding Tdee, Converter={StaticResource IntStr}}" />
+                                        <Label FontSize="10" TextColor="{StaticResource Muted}"
+                                               VerticalOptions="End" Text="kcal" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Aktiv" HorizontalOptions="Center" />
+                                    <HorizontalStackLayout Spacing="3" HorizontalOptions="Center">
+                                        <Label Style="{StaticResource StatValue}" FontSize="16"
+                                               Text="{Binding ActiveCalories, Converter={StaticResource IntStr}}" />
+                                        <Label FontSize="10" TextColor="{StaticResource Muted}"
+                                               VerticalOptions="End" Text="kcal" />
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ── Surplus/Deficit slider ───────────────── -->
+                    <Label Style="{StaticResource Eyebrow}" Text="Anpassung" Margin="4,0,0,0" />
+                    <Border Style="{StaticResource Card}" Padding="16,14">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Überschuss" />
+                                    <Label FontSize="13" TextColor="{StaticResource Ink}" Text="Lean Bulk" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1"
+                                       FontFamily="{StaticResource MonoFont}" FontSize="22"
+                                       TextColor="{Binding SurplusPercent,
+                                                   Converter={StaticResource SurplusColor},
+                                                   ConverterParameter=fg}"
+                                       Text="{Binding SurplusPercent, StringFormat='{0:+0.0;-0.0;0.0}%'}" />
+                            </Grid>
+                            <Slider Minimum="-10" Maximum="15"
+                                    Value="{Binding SurplusPercent, Mode=TwoWay}"
+                                    MinimumTrackColor="{StaticResource Accent}"
+                                    MaximumTrackColor="{StaticResource Hairline}"
+                                    ThumbColor="{StaticResource AccentInk}" />
+                            <Grid ColumnDefinitions="*,*,*">
+                                <Label Grid.Column="0" Style="{StaticResource Eyebrow}" Text="−10%" />
+                                <Label Grid.Column="1" Style="{StaticResource Eyebrow}" Text="0"
+                                       HorizontalOptions="Center" />
+                                <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="+15%"
+                                       HorizontalOptions="End" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ── Garmin activity row ──────────────────── -->
+                    <Label Style="{StaticResource Eyebrow}" Text="Garmin" Margin="4,0,0,0" />
+                    <Border Style="{StaticResource Card}" Padding="16,14">
+                        <VerticalStackLayout Spacing="12">
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Border Grid.Column="0" WidthRequest="32" HeightRequest="32"
+                                        Background="{StaticResource SurfaceAlt}"
+                                        Stroke="Transparent" StrokeThickness="0">
+                                    <Border.StrokeShape><RoundRectangle CornerRadius="8" /></Border.StrokeShape>
+                                    <Image Source="icon_watch.png" HeightRequest="18" WidthRequest="18"
+                                           HorizontalOptions="Center" VerticalOptions="Center" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="10,0,0,0">
+                                    <Label FontSize="13" FontAttributes="Bold"
+                                           TextColor="{StaticResource Ink}" Text="Letzte Aktivität" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="10"
+                                           TextColor="{StaticResource Muted}"
+                                           Text="{Binding Activity.ActivityDate}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                            <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                            <Grid ColumnDefinitions="*,*,*,*">
+                                <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Dauer" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding Activity.DurationMinutes, StringFormat='{0} min'}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Ø HR" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding Activity.AvgHr}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Max HR" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding Activity.MaxHr}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="3" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Garmin" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding Activity.GarminCalories,
+                                                  Converter={StaticResource IntStr},
+                                                  StringFormat='{0} kcal'}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- Error label -->
+                    <Label IsVisible="{Binding ErrorMessage, Converter={StaticResource Invert}}"
+                           Text="{Binding ErrorMessage}"
+                           TextColor="{StaticResource Danger}"
+                           FontSize="12" HorizontalOptions="Center" />
+
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Loading overlay (centered on top of everything) -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource AccentInk}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center" />
+        </Grid>
+
+        <!-- ─────────────────────── Bottom tab bar ───────────────── -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*"
+              BackgroundColor="{StaticResource Surface}"
+              Padding="0,10,0,4">
+            <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_home.png" HeightRequest="20" WidthRequest="20" />
+                <Label Style="{StaticResource Eyebrow}" Text="Home"
+                       TextColor="{StaticResource Ink}" FontAttributes="Bold" />
             </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_cog.png" HeightRequest="20" WidthRequest="20" Opacity="0.5" />
+                <Label Style="{StaticResource Eyebrow}" Text="Profil" />
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                </VerticalStackLayout.GestureRecognizers>
+            </VerticalStackLayout>
+        </Grid>
 
-            <!-- Refresh Button -->
-            <Button
-                Text="🔄 Neu laden"
-                Command="{Binding RefreshDataCommand}"
-                BackgroundColor="Blue"
-                TextColor="White"
-                Padding="20"
-                FontSize="16"
-                CornerRadius="8"
-                IsVisible="{Binding IsLoading, Converter={StaticResource InvertedBoolConverter}}" />
-
-        </VerticalStackLayout>
-    </ScrollView>
-
+    </Grid>
 </ContentPage>

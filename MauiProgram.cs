@@ -16,8 +16,12 @@ public static class MauiProgram
             .UseMauiApp<App>()
             .ConfigureFonts(fonts =>
             {
-                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-                fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+                fonts.AddFont("OpenSans-Regular.ttf",        "OpenSansRegular");
+                fonts.AddFont("OpenSans-Semibold.ttf",       "OpenSansSemibold");
+                // Handoff fonts — drop TTF files into Resources/Fonts/ to activate
+                fonts.AddFont("Inter_18pt-Regular.ttf",      "Inter");
+                fonts.AddFont("Inter_18pt-Bold.ttf",         "InterBold");
+                fonts.AddFont("JetBrainsMono-Regular.ttf",   "JetBrainsMono");
             });
 
         // ── Services ────────────────────────────────────────────────────────

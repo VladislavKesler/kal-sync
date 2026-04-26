@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:kal_sync.ViewModels"
+             x:Class="kal_sync.Views.EmptyStateView"
+             x:DataType="vm:HomeViewModel">
+
+    <ContentView.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Bg">#F7F8FA</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="Ink">#1A1F2A</Color>
+            <Color x:Key="Muted">#6B7280</Color>
+            <Color x:Key="Hairline">#E2E5EA</Color>
+            <Color x:Key="AccentInk">#3F6E1F</Color>
+            <x:String x:Key="MonoFont">JetBrainsMono</x:String>
+        </ResourceDictionary>
+    </ContentView.Resources>
+
+    <Grid BackgroundColor="{StaticResource Bg}">
+        <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center"
+                             Padding="32,0" Spacing="8">
+
+            <!-- Watch icon -->
+            <Border WidthRequest="80" HeightRequest="80"
+                    Background="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}" StrokeThickness="1"
+                    HorizontalOptions="Center"
+                    Margin="0,0,0,16">
+                <Border.StrokeShape><RoundRectangle CornerRadius="24" /></Border.StrokeShape>
+                <Image Source="icon_watch.png" HeightRequest="36" WidthRequest="36"
+                       HorizontalOptions="Center" VerticalOptions="Center" />
+            </Border>
+
+            <Label FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Ink}"
+                   HorizontalOptions="Center" Text="Noch keine Aktivität" />
+
+            <Label FontSize="13" TextColor="{StaticResource Muted}"
+                   HorizontalTextAlignment="Center" MaximumWidthRequest="280"
+                   Text="Synchronisiere deine Garmin-Uhr, um die heutigen Aktivkalorien zu laden." />
+
+            <Button Text="Jetzt synchronisieren"
+                    Command="{Binding RefreshDataCommand}"
+                    BackgroundColor="{StaticResource Ink}"
+                    TextColor="{StaticResource Bg}"
+                    CornerRadius="999"
+                    Padding="22,12"
+                    Margin="0,16,0,0" />
+
+            <Button Text="Profil zuerst einrichten →"
+                    BackgroundColor="Transparent"
+                    TextColor="{StaticResource Muted}"
+                    FontSize="12"
+                    Clicked="OnGoToProfileClicked" />
+
+            <!-- Backend hint -->
+            <Border Margin="0,32,0,0" Padding="16,12"
+                    Background="{StaticResource Surface}"
+                    Stroke="{StaticResource Hairline}" StrokeThickness="1"
+                    StrokeDashArray="2,2">
+                <Border.StrokeShape><RoundRectangle CornerRadius="12" /></Border.StrokeShape>
+                <VerticalStackLayout Spacing="4">
+                    <Label FontFamily="{StaticResource MonoFont}" FontSize="10"
+                           TextColor="{StaticResource Muted}"
+                           Text="$ curl /api/health" />
+                    <Label FontFamily="{StaticResource MonoFont}" FontSize="10"
+                           TextColor="{StaticResource AccentInk}">
+                        <Label.Text>{ "status": "ok" }</Label.Text>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentView>
