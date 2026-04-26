@@ -60,7 +60,6 @@ jobs:
   python-tests:
     name: Python — Lint, Type Check & Test
     runs-on: ubuntu-latest
-    if: hashFiles('garmin-backend/requirements.txt') != ''
 
     defaults:
       run:
