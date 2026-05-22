@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:kal_sync.ViewModels"
+             xmlns:models="clr-namespace:kal_sync.Models"
+             x:Class="kal_sync.Views.BodyMeasurementsPage"
+             x:DataType="vm:BodyMeasurementViewModel"
+             x:Name="ThisPage"
+             Title="Messungen"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Bg">#F7F8FA</Color>
+            <Color x:Key="Surface">#FFFFFF</Color>
+            <Color x:Key="Ink">#1A1F2A</Color>
+            <Color x:Key="Muted">#6B7280</Color>
+            <Color x:Key="Faint">#9AA1AC</Color>
+            <Color x:Key="Hairline">#E2E5EA</Color>
+            <Color x:Key="Accent">#A8D86A</Color>
+            <Color x:Key="AccentInk">#3F6E1F</Color>
+            <Color x:Key="Danger">#E74C3C</Color>
+
+            <x:String x:Key="MonoFont">JetBrainsMono</x:String>
+            <x:String x:Key="UiFont">Inter</x:String>
+
+            <Style x:Key="Eyebrow" TargetType="Label">
+                <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+                <Setter Property="FontSize" Value="10" />
+                <Setter Property="CharacterSpacing" Value="3" />
+                <Setter Property="TextTransform" Value="Uppercase" />
+                <Setter Property="TextColor" Value="{StaticResource Muted}" />
+            </Style>
+
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource Surface}" />
+                <Setter Property="Stroke" Value="{StaticResource Hairline}" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="StrokeShape">
+                    <RoundRectangle CornerRadius="14" />
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid BackgroundColor="{StaticResource Bg}" RowDefinitions="Auto,*,Auto">
+
+        <!-- ─────────────────────── Header ──────────────────────── -->
+        <Grid Grid.Row="0" Padding="20,14,20,10" ColumnDefinitions="*,Auto">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Style="{StaticResource Eyebrow}" Text="Körper" />
+                <Label FontFamily="{StaticResource UiFont}" FontSize="19"
+                       FontAttributes="Bold" TextColor="{StaticResource Ink}"
+                       Text="Messungen" />
+            </VerticalStackLayout>
+            <Button Grid.Column="1"
+                    Text="+"
+                    Command="{Binding ToggleFormCommand}"
+                    BackgroundColor="{StaticResource Ink}"
+                    TextColor="White"
+                    FontSize="20"
+                    WidthRequest="36"
+                    HeightRequest="36"
+                    CornerRadius="18"
+                    Padding="0"
+                    VerticalOptions="Center" />
+        </Grid>
+
+        <!-- ─────────────────────── Body ────────────────────────── -->
+        <Grid Grid.Row="1" RowDefinitions="Auto,*">
+
+            <!-- Add form -->
+            <Border Grid.Row="0" Style="{StaticResource Card}"
+                    Margin="16,0,16,12" Padding="0"
+                    IsVisible="{Binding IsFormVisible}">
+                <VerticalStackLayout>
+                    <Grid Padding="16,14" ColumnDefinitions="*,Auto,Auto">
+                        <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                               Text="Gewicht" VerticalOptions="Center" />
+                        <Label Grid.Column="1" FontFamily="{StaticResource MonoFont}" FontSize="16"
+                               TextColor="{StaticResource Ink}" VerticalOptions="Center"
+                               Margin="0,0,8,0"
+                               Text="{Binding NewWeightKg, StringFormat='{0:F1} kg'}" />
+                        <Stepper Grid.Column="2" Minimum="30" Maximum="200" Increment="0.5"
+                                 Value="{Binding NewWeightKg, Mode=TwoWay}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                    <Grid Padding="16,14" ColumnDefinitions="*,Auto,Auto">
+                        <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                               Text="Körperfett" VerticalOptions="Center" />
+                        <Label Grid.Column="1" FontFamily="{StaticResource MonoFont}" FontSize="16"
+                               TextColor="{StaticResource Ink}" VerticalOptions="Center"
+                               Margin="0,0,8,0"
+                               Text="{Binding NewBodyFatPercent, StringFormat='{0:F1}%'}" />
+                        <Stepper Grid.Column="2" Minimum="3" Maximum="60" Increment="0.5"
+                                 Value="{Binding NewBodyFatPercent, Mode=TwoWay}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                    <Button Text="Eintragen"
+                            Command="{Binding AddCommand}"
+                            BackgroundColor="{StaticResource AccentInk}"
+                            TextColor="White"
+                            FontFamily="{StaticResource UiFont}"
+                            FontAttributes="Bold"
+                            FontSize="14"
+                            CornerRadius="0"
+                            HeightRequest="46"
+                            Margin="0" />
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Measurements list -->
+            <CollectionView Grid.Row="1"
+                            ItemsSource="{Binding Measurements}"
+                            Margin="16,0,16,8">
+
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center"
+                                         Padding="32,64" Spacing="8">
+                        <Label FontSize="16" FontAttributes="Bold" TextColor="{StaticResource Ink}"
+                               HorizontalOptions="Center" Text="Noch keine Einträge" />
+                        <Label FontSize="13" TextColor="{StaticResource Muted}"
+                               HorizontalTextAlignment="Center"
+                               Text="Tippe auf »+« um deine erste Messung einzutragen." />
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:BodyMeasurement">
+                        <Border Style="{StaticResource Card}" Margin="0,0,0,10" Padding="16,14">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                                <VerticalStackLayout Grid.Column="0" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Datum" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding Date, StringFormat='{0:dd.MM.yyyy}'}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="3" Margin="16,0">
+                                    <Label Style="{StaticResource Eyebrow}" Text="Gewicht" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding WeightKg, StringFormat='{0:F1} kg'}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="2" Spacing="3">
+                                    <Label Style="{StaticResource Eyebrow}" Text="KF" />
+                                    <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                                           TextColor="{StaticResource Ink}"
+                                           Text="{Binding BodyFatPercent, StringFormat='{0:F1}%'}" />
+                                </VerticalStackLayout>
+                                <Label Grid.Column="3"
+                                       Text="×"
+                                       FontSize="20"
+                                       TextColor="{StaticResource Faint}"
+                                       VerticalOptions="Center"
+                                       Margin="16,0,0,0">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer
+                                            Command="{Binding Source={x:Reference ThisPage}, Path=BindingContext.DeleteCommand}"
+                                            CommandParameter="{Binding .}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+            <!-- Loading overlay -->
+            <ActivityIndicator Grid.Row="1"
+                               IsRunning="{Binding IsLoading}"
+                               IsVisible="{Binding IsLoading}"
+                               Color="{StaticResource AccentInk}"
+                               VerticalOptions="Center"
+                               HorizontalOptions="Center" />
+        </Grid>
+
+        <!-- ─────────────────────── Tab bar ─────────────────────── -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*"
+              BackgroundColor="{StaticResource Surface}" Padding="0,10,0,4">
+            <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_home.png" HeightRequest="20" WidthRequest="20" Opacity="0.5" />
+                <Label Style="{StaticResource Eyebrow}" Text="Home" />
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnHomeTapped" />
+                </VerticalStackLayout.GestureRecognizers>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_refresh.png" HeightRequest="20" WidthRequest="20" />
+                <Label Style="{StaticResource Eyebrow}" Text="Messungen"
+                       TextColor="{StaticResource Ink}" FontAttributes="Bold" />
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_cog.png" HeightRequest="20" WidthRequest="20" Opacity="0.5" />
+                <Label Style="{StaticResource Eyebrow}" Text="Profil" />
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnSettingsTapped" />
+                </VerticalStackLayout.GestureRecognizers>
+            </VerticalStackLayout>
+        </Grid>
+
+    </Grid>
+</ContentPage>

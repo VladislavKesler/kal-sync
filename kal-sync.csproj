@@ -39,7 +39,7 @@
 		     CA1805    — template-generated default initialisation in MainPage
 		     MVVMTK0045 — partial-property [ObservableProperty] requires C# 13
 		                   + CsWinRT support; backing-field approach is used instead -->
-		<NoWarn>CA1707;CA1711;CA1805;MVVMTK0045</NoWarn>
+		<NoWarn>CA1707;CA1711;CA1805;MVVMTK0045;XC0025</NoWarn>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
@@ -76,6 +76,8 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+		<PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
 	</ItemGroup>
 
 	<ItemGroup>

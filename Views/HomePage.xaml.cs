@@ -36,6 +36,9 @@ public partial class HomePage : ContentPage
         RingView.Invalidate();
     }
 
+    async void OnMeasurementsTapped(object sender, TappedEventArgs e)
+        => await Shell.Current.GoToAsync("//BodyMeasurementsPage");
+
     async void OnSettingsTapped(object sender, TappedEventArgs e)
         => await Shell.Current.GoToAsync("//SettingsPage");
 }

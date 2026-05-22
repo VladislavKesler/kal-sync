@@ -33,3 +33,7 @@ __pycache__/
 .env
 .env.local
 credentials/
+
+# Android Keystore – niemals committen
+*.jks
+*.keystore

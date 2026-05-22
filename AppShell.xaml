@@ -12,6 +12,11 @@
             Route="HomePage" />
 
         <ShellContent
+            Title="Messungen"
+            ContentTemplate="{DataTemplate local:BodyMeasurementsPage}"
+            Route="BodyMeasurementsPage" />
+
+        <ShellContent
             Title="Settings"
             ContentTemplate="{DataTemplate local:SettingsPage}"
             Route="SettingsPage" />

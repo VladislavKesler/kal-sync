@@ -12,4 +12,7 @@ public partial class SettingsPage : ContentPage
 
     async void OnHomeTapped(object sender, TappedEventArgs e)
         => await Shell.Current.GoToAsync("//HomePage");
+
+    async void OnMeasurementsTapped(object sender, TappedEventArgs e)
+        => await Shell.Current.GoToAsync("//BodyMeasurementsPage");
 }

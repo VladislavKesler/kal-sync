@@ -193,7 +193,7 @@
         </ScrollView>
 
         <!-- ─────────────────────── Tab bar ─────────────────────── -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,*"
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*"
               BackgroundColor="{StaticResource Surface}" Padding="0,10,0,4">
             <VerticalStackLayout Grid.Column="0" Spacing="4" HorizontalOptions="Center">
                 <Image Source="icon_home.png" HeightRequest="20" WidthRequest="20" Opacity="0.5" />
@@ -203,6 +203,13 @@
                 </VerticalStackLayout.GestureRecognizers>
             </VerticalStackLayout>
             <VerticalStackLayout Grid.Column="1" Spacing="4" HorizontalOptions="Center">
+                <Image Source="icon_refresh.png" HeightRequest="20" WidthRequest="20" Opacity="0.5" />
+                <Label Style="{StaticResource Eyebrow}" Text="Messungen" />
+                <VerticalStackLayout.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnMeasurementsTapped" />
+                </VerticalStackLayout.GestureRecognizers>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="2" Spacing="4" HorizontalOptions="Center">
                 <Image Source="icon_cog.png" HeightRequest="20" WidthRequest="20" />
                 <Label Style="{StaticResource Eyebrow}" Text="Profil"
                        TextColor="{StaticResource Ink}" FontAttributes="Bold" />

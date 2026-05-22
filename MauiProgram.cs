@@ -28,14 +28,17 @@ public static class MauiProgram
         builder.Services.AddSingleton<GarminApiService>();
         builder.Services.AddSingleton<UserProfileService>();
         builder.Services.AddSingleton<GaintainingService>();
+        builder.Services.AddSingleton<DatabaseService>();
 
         // ── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomeViewModel>();
         builder.Services.AddSingleton<SettingsViewModel>();
+        builder.Services.AddSingleton<BodyMeasurementViewModel>();
 
         // ── Views ───────────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomePage>();
         builder.Services.AddSingleton<SettingsPage>();
+        builder.Services.AddSingleton<BodyMeasurementsPage>();
 
         return builder.Build();
     }
