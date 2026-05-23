@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:kal_sync.ViewModels"
              xmlns:models="clr-namespace:kal_sync.Models"
+             xmlns:conv="clr-namespace:kal_sync.Converters"
              x:Class="kal_sync.Views.BodyMeasurementsPage"
              x:DataType="vm:BodyMeasurementViewModel"
              x:Name="ThisPage"
@@ -68,7 +69,7 @@
         </Grid>
 
         <!-- ─────────────────────── Body ────────────────────────── -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,*">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*">
 
             <!-- Add form -->
             <Border Grid.Row="0" Style="{StaticResource Card}"
@@ -110,8 +111,20 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Chart: Gewicht (schwarz) + KFA (dunkelgrün) -->
+            <Border Grid.Row="1" Style="{StaticResource Card}"
+                    Margin="16,0,16,12" Padding="8,10"
+                    IsVisible="{Binding HasData}">
+                <VerticalStackLayout Spacing="4">
+                    <Label Style="{StaticResource Eyebrow}" Text="Verlauf" Margin="4,0" />
+                    <GraphicsView x:Name="ChartView"
+                                  HeightRequest="210"
+                                  Drawable="{Binding ChartDrawable}" />
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Measurements list -->
-            <CollectionView Grid.Row="1"
+            <CollectionView Grid.Row="2"
                             ItemsSource="{Binding Measurements}"
                             Margin="16,0,16,8">
 
@@ -168,7 +181,7 @@
             </CollectionView>
 
             <!-- Loading overlay -->
-            <ActivityIndicator Grid.Row="1"
+            <ActivityIndicator Grid.Row="2"
                                IsRunning="{Binding IsLoading}"
                                IsVisible="{Binding IsLoading}"
                                Color="{StaticResource AccentInk}"

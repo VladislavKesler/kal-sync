@@ -1,6 +1,6 @@
-using kal_sync.Views;
-using kal_sync.ViewModels;
 using kal_sync.Services;
+using kal_sync.ViewModels;
+using kal_sync.Views;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -29,6 +29,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<UserProfileService>();
         builder.Services.AddSingleton<GaintainingService>();
         builder.Services.AddSingleton<DatabaseService>();
+        builder.Services.AddSingleton<NotificationService>();
 
         // ── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomeViewModel>();

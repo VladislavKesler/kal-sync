@@ -10,6 +10,9 @@ namespace kal_sync.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly UserProfileService _profileService;
+    private readonly NotificationService _notificationService;
+
+    private static readonly int[] IntervalDays = [1, 3, 7, 14, 30];
 
     // ── Form fields ──────────────────────────────────────────────────────────
 
@@ -21,10 +24,7 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(CalculatedBmr))]
     private double _bodyFatPercent;
 
-    /// <summary>
-    /// Age exposed as double so it binds without type coercion issues to Stepper.Value (double).
-    /// Cast to int is applied in Save().
-    /// </summary>
+    /// <summary>Age as double so it binds to Stepper.Value without coercion; cast to int in Save().</summary>
     [ObservableProperty]
     private double _ageDouble;
 
@@ -33,6 +33,14 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private double _surplusPercent;
+
+    // ── Notification settings ────────────────────────────────────────────────
+
+    [ObservableProperty]
+    private bool _measurementReminderEnabled;
+
+    [ObservableProperty]
+    private string _selectedReminderInterval = "Wöchentlich";
 
     // ── Derived display ──────────────────────────────────────────────────────
 
@@ -50,22 +58,35 @@ public partial class SettingsViewModel : ObservableObject
 
     public List<string> SexOptions { get; } = ["Male", "Female"];
 
+    public List<string> ReminderIntervalOptions { get; } =
+        ["Täglich", "Alle 3 Tage", "Wöchentlich", "Alle 2 Wochen", "Monatlich"];
+
     // ── Constructor ──────────────────────────────────────────────────────────
 
-    public SettingsViewModel(UserProfileService profileService)
+    public SettingsViewModel(UserProfileService profileService, NotificationService notificationService)
     {
-        _profileService = profileService;
+        _profileService      = profileService;
+        _notificationService = notificationService;
         LoadProfile();
+        LoadNotificationSettings();
     }
 
     private void LoadProfile()
     {
-        var p      = _profileService.Load();
-        WeightKg   = p.WeightKg;
+        var p          = _profileService.Load();
+        WeightKg       = p.WeightKg;
         BodyFatPercent = p.BodyFatPercent;
-        AgeDouble  = p.Age;
-        SelectedSex = p.Sex == Sex.Female ? "Female" : "Male";
+        AgeDouble      = p.Age;
+        SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
         SurplusPercent = p.SurplusPercent;
+    }
+
+    private void LoadNotificationSettings()
+    {
+        MeasurementReminderEnabled = _notificationService.ReminderEnabled;
+        int days = _notificationService.ReminderIntervalDays;
+        int idx  = Array.IndexOf(IntervalDays, days);
+        SelectedReminderInterval = idx >= 0 ? ReminderIntervalOptions[idx] : "Wöchentlich";
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
@@ -81,5 +102,9 @@ public partial class SettingsViewModel : ObservableObject
             Sex            = SelectedSex == "Female" ? Sex.Female : Sex.Male,
             SurplusPercent = SurplusPercent,
         });
+
+        _notificationService.ReminderEnabled = MeasurementReminderEnabled;
+        int idx = ReminderIntervalOptions.IndexOf(SelectedReminderInterval);
+        _notificationService.ReminderIntervalDays = idx >= 0 ? IntervalDays[idx] : 7;
     }
 }

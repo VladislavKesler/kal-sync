@@ -171,6 +171,32 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Notifications section -->
+                <Label Style="{StaticResource Eyebrow}" Text="Benachrichtigungen" Margin="4,0,0,0" />
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <VerticalStackLayout>
+                        <!-- Reminder toggle -->
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                                   Text="KFA-Messung erinnern" VerticalOptions="Center" />
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding MeasurementReminderEnabled, Mode=TwoWay}"
+                                    OnColor="{StaticResource AccentInk}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                        <!-- Interval picker -->
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                                   Text="Intervall" VerticalOptions="Center" />
+                            <Picker Grid.Column="1"
+                                    ItemsSource="{Binding ReminderIntervalOptions}"
+                                    SelectedItem="{Binding SelectedReminderInterval, Mode=TwoWay}"
+                                    IsEnabled="{Binding MeasurementReminderEnabled}"
+                                    WidthRequest="160" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Save button -->
                 <Button Text="Speichern"
                         Command="{Binding SaveCommand}"
