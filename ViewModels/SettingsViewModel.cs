@@ -34,6 +34,9 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private double _surplusPercent;
 
+    [ObservableProperty]
+    private string _backendUrl = string.Empty;
+
     // ── Notification settings ────────────────────────────────────────────────
 
     [ObservableProperty]
@@ -79,6 +82,7 @@ public partial class SettingsViewModel : ObservableObject
         AgeDouble      = p.Age;
         SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
         SurplusPercent = p.SurplusPercent;
+        BackendUrl = _profileService.GetBackendUrl();
     }
 
     private void LoadNotificationSettings()
@@ -106,5 +110,8 @@ public partial class SettingsViewModel : ObservableObject
         _notificationService.ReminderEnabled = MeasurementReminderEnabled;
         int idx = ReminderIntervalOptions.IndexOf(SelectedReminderInterval);
         _notificationService.ReminderIntervalDays = idx >= 0 ? IntervalDays[idx] : 7;
+
+        if (!string.IsNullOrWhiteSpace(BackendUrl))
+            _profileService.SaveBackendUrl(BackendUrl.TrimEnd('/'));
     }
 }

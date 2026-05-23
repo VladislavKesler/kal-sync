@@ -18,23 +18,13 @@ public class GarminApiService : IDisposable
         new() { PropertyNameCaseInsensitive = true };
 
     private readonly HttpClient _httpClient;
+    private readonly UserProfileService _userProfileService;
     private bool _disposed;
 
-#if DEBUG
-    #if ANDROID
-    // Android Emulator routes 10.0.2.2 → host machine's localhost.
-    private readonly string _apiBaseUrl = "http://10.0.2.2:8000";
-    #else
-    // Windows / iOS Simulator / macOS → real localhost.
-    private readonly string _apiBaseUrl = "http://localhost:8000";
-    #endif
-#else
-    private readonly string _apiBaseUrl = "https://api.example.com";
-#endif
-
     /// <summary>Initialises the service and its <see cref="HttpClient"/>.</summary>
-    public GarminApiService()
+    public GarminApiService(UserProfileService userProfileService)
     {
+        _userProfileService = userProfileService;
         var handler = new HttpClientHandler();
 
 #if DEBUG
@@ -55,7 +45,7 @@ public class GarminApiService : IDisposable
     /// </summary>
     public async Task<ActivityResponse?> GetLatestActivityAsync()
     {
-        var url = $"{_apiBaseUrl}/api/activities/latest";
+        var url = $"{_userProfileService.GetBackendUrl()}/api/activities/latest";
 
         Debug.WriteLine($"[GarminApiService] Calling {url}");
 
@@ -97,7 +87,7 @@ public class GarminApiService : IDisposable
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{_apiBaseUrl}/api/health");
+            var response = await _httpClient.GetAsync($"{_userProfileService.GetBackendUrl()}/api/health");
             return response.IsSuccessStatusCode;
         }
         catch

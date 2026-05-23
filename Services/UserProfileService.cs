@@ -16,6 +16,7 @@ public class UserProfileService
     private const string AgeKey = "profile.age";
     private const string SexKey = "profile.sex";
     private const string SurplusKey = "profile.surplus_percent";
+    private const string BackendUrlKey = "profile.backend_url";
 
     // ── Persistence ─────────────────────────────────────────────────────────
 
@@ -42,6 +43,25 @@ public class UserProfileService
         Preferences.Set(SexKey, (int)profile.Sex);
         Preferences.Set(SurplusKey, profile.SurplusPercent);
     }
+
+    // ── Backend URL ─────────────────────────────────────────────────────────
+
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
+    public string GetBackendUrl()
+    {
+#if DEBUG && ANDROID
+        const string defaultUrl = "http://10.0.2.2:8000";
+#else
+        const string defaultUrl = "http://localhost:8000";
+#endif
+        return Preferences.Get(BackendUrlKey, defaultUrl);
+    }
+
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
+    public void SaveBackendUrl(string url)
+        => Preferences.Set(BackendUrlKey, url);
 
     // ── Katch-McArdle formula ────────────────────────────────────────────────
 
