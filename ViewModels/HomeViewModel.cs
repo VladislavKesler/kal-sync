@@ -66,6 +66,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasData;
 
+    private DateTime _lastLoaded = DateTime.MinValue;
+
     public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService)
     {
         _apiService = apiService;
@@ -114,16 +116,18 @@ public partial class HomeViewModel : ObservableObject
         {
             IsLoading = false;
         }
+
+        _lastLoaded = DateTime.Now;
     }
 
     [RelayCommand]
     public async Task RefreshData() => await LoadLatestActivity();
 
-    /// <summary>Auto-load on first appearance.</summary>
+    /// <summary>Refresh on every appearance, but at most once per 30 minutes.</summary>
     [RelayCommand]
     public async Task PageAppearing()
     {
-        if (!HasData)
+        if (!HasData || (DateTime.Now - _lastLoaded).TotalMinutes >= 30)
             await LoadLatestActivity();
     }
 }
