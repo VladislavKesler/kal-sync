@@ -37,6 +37,11 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _backendUrl = string.Empty;
 
+    // ── Developer options ────────────────────────────────────────────────────
+
+    [ObservableProperty]
+    private bool _usbDebuggingEnabled;
+
     // ── Notification settings ────────────────────────────────────────────────
 
     [ObservableProperty]
@@ -82,7 +87,8 @@ public partial class SettingsViewModel : ObservableObject
         AgeDouble      = p.Age;
         SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
         SurplusPercent = p.SurplusPercent;
-        BackendUrl = _profileService.GetBackendUrl();
+        BackendUrl        = _profileService.GetBackendUrl();
+        UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
     }
 
     private void LoadNotificationSettings()
@@ -111,7 +117,9 @@ public partial class SettingsViewModel : ObservableObject
         int idx = ReminderIntervalOptions.IndexOf(SelectedReminderInterval);
         _notificationService.ReminderIntervalDays = idx >= 0 ? IntervalDays[idx] : 7;
 
-        if (!string.IsNullOrWhiteSpace(BackendUrl))
+        Preferences.Set("dev.usb_debugging", UsbDebuggingEnabled);
+
+        if (UsbDebuggingEnabled && !string.IsNullOrWhiteSpace(BackendUrl))
             _profileService.SaveBackendUrl(BackendUrl.TrimEnd('/'));
     }
 }

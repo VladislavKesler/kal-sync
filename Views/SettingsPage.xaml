@@ -197,9 +197,25 @@
                     </VerticalStackLayout>
                 </Border>
 
-                <!-- Backend URL -->
-                <Label Style="{StaticResource Eyebrow}" Text="Verbindung" Margin="4,0,0,0" />
-                <Border Style="{StaticResource Card}" Padding="16,14">
+                <!-- Developer options -->
+                <Label Style="{StaticResource Eyebrow}" Text="Entwickleroptionen" Margin="4,0,0,0" />
+                <Border Style="{StaticResource Card}" Padding="0">
+                    <VerticalStackLayout>
+                        <Grid Style="{StaticResource FieldRow}">
+                            <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                                   Text="USB-Debugging" VerticalOptions="Center" />
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding UsbDebuggingEnabled, Mode=TwoWay}"
+                                    OnColor="{StaticResource AccentInk}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Backend URL (nur im Debug-Modus) -->
+                <Label Style="{StaticResource Eyebrow}" Text="Verbindung" Margin="4,0,0,0"
+                       IsVisible="{Binding UsbDebuggingEnabled}" />
+                <Border Style="{StaticResource Card}" Padding="16,14"
+                        IsVisible="{Binding UsbDebuggingEnabled}">
                     <VerticalStackLayout Spacing="8">
                         <Label FontSize="13" TextColor="{StaticResource Muted}"
                                Text="Backend-URL (z. B. http://192.168.1.100:8000)" />
