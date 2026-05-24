@@ -13,7 +13,7 @@
     ═══════════════════════════════════════════════════════════════════
       SettingsPage · user profile form
       ViewModel: SettingsViewModel
-        WeightKg, BodyFatPercent, Age, SelectedSex, SurplusPercent,
+        WeightKg, BodyFatPercent, Age, SelectedSex, DeficitCap,
         CalculatedBmr, SexOptions, SaveCommand
     ═══════════════════════════════════════════════════════════════════
     -->
@@ -57,7 +57,6 @@
 
             <conv:DoubleToIntStringConverter x:Key="IntStr" />
             <conv:LeanBodyMassConverter      x:Key="Lbm" />
-            <conv:SurplusToColorConverter    x:Key="SurplusColor" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -160,24 +159,22 @@
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
-                                   Text="{Binding SurplusLabel}" VerticalOptions="Center" />
+                                   Text="Defizit-Cap" VerticalOptions="Center" />
                             <Label Grid.Column="1"
                                    FontFamily="{StaticResource MonoFont}" FontSize="16"
-                                   TextColor="{Binding SurplusPercent,
-                                               Converter={StaticResource SurplusColor},
-                                               ConverterParameter=fg}"
-                                   Text="{Binding SurplusPercent, StringFormat='{0:+0.0;-0.0;0.0}%'}" />
+                                   TextColor="{StaticResource Ink}"
+                                   Text="{Binding DeficitCap, StringFormat='{0:F0} kcal'}" />
                         </Grid>
-                        <Slider Minimum="-10" Maximum="15"
-                                Value="{Binding SurplusPercent, Mode=TwoWay}"
+                        <Slider Minimum="0" Maximum="500"
+                                Value="{Binding DeficitCap, Mode=TwoWay}"
                                 MinimumTrackColor="{StaticResource Accent}"
                                 MaximumTrackColor="{StaticResource Hairline}"
                                 ThumbColor="{StaticResource AccentInk}" />
                         <Grid ColumnDefinitions="*,*,*">
-                            <Label Grid.Column="0" Style="{StaticResource Eyebrow}" Text="−10%" />
-                            <Label Grid.Column="1" Style="{StaticResource Eyebrow}" Text="0"
+                            <Label Grid.Column="0" Style="{StaticResource Eyebrow}" Text="0 kcal" />
+                            <Label Grid.Column="1" Style="{StaticResource Eyebrow}" Text="250 kcal"
                                    HorizontalOptions="Center" />
-                            <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="+15%"
+                            <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="500 kcal"
                                    HorizontalOptions="End" />
                         </Grid>
                     </VerticalStackLayout>

@@ -13,10 +13,10 @@ public partial class HomePage : ContentPage
         BindingContext = viewModel;
         _vm = viewModel;
 
-        // Wire ring drawable to SurplusPercent changes
+        // Wire ring drawable to DeficitPercent changes
         _vm.PropertyChanged += (_, e) =>
         {
-            if (e.PropertyName == nameof(HomeViewModel.SurplusPercent))
+            if (e.PropertyName == nameof(HomeViewModel.DeficitPercent))
                 UpdateRing();
         };
     }
@@ -28,11 +28,11 @@ public partial class HomePage : ContentPage
             vm.PageAppearingCommand.Execute(null);
     }
 
-    /// <summary>Push current SurplusPercent to the ring drawable and trigger redraw.</summary>
+    /// <summary>Push current DeficitPercent to the ring drawable and trigger redraw.</summary>
     private void UpdateRing()
     {
         if (_vm is null) return;
-        RingDrawable.Surplus = _vm.SurplusPercent;
+        RingDrawable.DeficitPercent = _vm.DeficitPercent;
         RingView.Invalidate();
     }
 

@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Xunit;
 
 namespace kal_sync.Tests.Services;
@@ -22,26 +22,55 @@ public class GaintainingServiceTests
         tdee.Should().BeApproximately(2429.0, precision: 0.1);
     }
 
-    // --- Target calories ---
+    // --- Target calories (DeficitCap formula) ---
 
     [Fact]
-    public void TargetKcal_ShouldApplySurplusCorrectly_ForFivePercent()
+    public void TargetKcal_ShouldAddBackCaloriesAboveCap()
     {
-        double tdee = 2429.0;
-        double surplusPercent = 5.0;
+        // activeCalories > deficitCap → target = BMR + (activeCalories - deficitCap)
+        double bmr = 1700.0;
+        double activeCalories = 800.0;
+        double deficitCap = 500.0;
 
-        double target = CalculateTargetKcal(tdee, surplusPercent);
+        double target = CalculateTargetKcal(bmr, activeCalories, deficitCap);
 
-        // 2429 * 1.05 = 2550.45
-        target.Should().BeApproximately(2550.45, precision: 0.1);
+        // 1700 + (800 - 500) = 2000
+        target.Should().BeApproximately(2000.0, precision: 0.1);
     }
 
     [Fact]
-    public void TargetKcal_ShouldEqualTdee_WhenSurplusIsZero()
+    public void TargetKcal_ShouldFloorAtBmr_WhenActiveCaloriesBelowCap()
     {
-        double tdee = 2429.0;
-        double target = CalculateTargetKcal(tdee, surplusPercent: 0.0);
-        target.Should().BeApproximately(tdee, precision: 0.01);
+        // activeCalories <= deficitCap → target = BMR
+        double bmr = 1700.0;
+        double activeCalories = 300.0;
+        double deficitCap = 500.0;
+
+        double target = CalculateTargetKcal(bmr, activeCalories, deficitCap);
+
+        target.Should().BeApproximately(bmr, precision: 0.01);
+    }
+
+    [Fact]
+    public void TargetKcal_ShouldEqualBmr_WhenNeitherActiveNorCap()
+    {
+        double bmr = 1942.0;
+
+        double target = CalculateTargetKcal(bmr, activeCalories: 0.0, deficitCap: 0.0);
+
+        target.Should().BeApproximately(bmr, precision: 0.01);
+    }
+
+    [Fact]
+    public void TargetKcal_ShouldEqualTdee_WhenCapIsZero()
+    {
+        // deficitCap = 0 → no active calories discarded → target = BMR + activeCalories = TDEE
+        double bmr = 1700.0;
+        double activeCalories = 600.0;
+
+        double target = CalculateTargetKcal(bmr, activeCalories, deficitCap: 0.0);
+
+        target.Should().BeApproximately(bmr + activeCalories, precision: 0.01);
     }
 
     // --- Traffic light (boundary value tests) ---
@@ -94,8 +123,11 @@ public class GaintainingServiceTests
     private static double CalculateTdee(double bmr, double activeCalories)
         => bmr + activeCalories;
 
-    private static double CalculateTargetKcal(double tdee, double surplusPercent)
-        => tdee * (1.0 + surplusPercent / 100.0);
+    private static double CalculateTargetKcal(double bmr, double activeCalories, double deficitCap)
+    {
+        double target = bmr + Math.Max(0.0, activeCalories - deficitCap);
+        return Math.Max(target, bmr);
+    }
 
     private static double CalculateMonthlyGainRate(
         double currentAvg, double previousAvg, double bodyWeight)

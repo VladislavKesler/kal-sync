@@ -15,7 +15,7 @@ public class UserProfileService
     private const string BodyFatKey = "profile.body_fat_percent";
     private const string AgeKey = "profile.age";
     private const string SexKey = "profile.sex";
-    private const string SurplusKey = "profile.surplus_percent";
+    private const string DeficitCapKey = "profile.deficit_cap";
     private const string BackendUrlKey = "profile.backend_url";
 
     // ── Persistence ─────────────────────────────────────────────────────────
@@ -26,11 +26,11 @@ public class UserProfileService
         Justification = "Instance method for DI / testability")]
     public UserProfile Load() => new()
     {
-        WeightKg = Preferences.Get(WeightKey, 80.0),
+        WeightKg       = Preferences.Get(WeightKey, 80.0),
         BodyFatPercent = Preferences.Get(BodyFatKey, 20.0),
-        Age = Preferences.Get(AgeKey, 30),
-        Sex = (Sex)Preferences.Get(SexKey, (int)Sex.Male),
-        SurplusPercent = Preferences.Get(SurplusKey, 5.0),
+        Age            = Preferences.Get(AgeKey, 30),
+        Sex            = (Sex)Preferences.Get(SexKey, (int)Sex.Male),
+        DeficitCap     = Preferences.Get(DeficitCapKey, 500.0),
     };
 
     [SuppressMessage("Performance", "CA1822:Mark members as static",
@@ -41,7 +41,7 @@ public class UserProfileService
         Preferences.Set(BodyFatKey, profile.BodyFatPercent);
         Preferences.Set(AgeKey, profile.Age);
         Preferences.Set(SexKey, (int)profile.Sex);
-        Preferences.Set(SurplusKey, profile.SurplusPercent);
+        Preferences.Set(DeficitCapKey, profile.DeficitCap);
     }
 
     // ── Backend URL ─────────────────────────────────────────────────────────

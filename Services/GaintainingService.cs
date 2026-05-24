@@ -12,9 +12,15 @@ public class GaintainingService
     public static double CalculateTdee(double bmr, double activeCalories)
         => bmr + activeCalories;
 
-    /// <summary>Target = TDEE × (1 + surplusPercent / 100).</summary>
-    public static double CalculateTargetKcal(double tdee, double surplusPercent)
-        => tdee * (1.0 + surplusPercent / 100.0);
+    /// <summary>
+    /// Target = BMR + max(0, activeCalories − deficitCap). Never falls below BMR.
+    /// deficitCap: active kcal counted as deficit and not added back.
+    /// </summary>
+    public static double CalculateTargetKcal(double bmr, double activeCalories, double deficitCap)
+    {
+        double target = bmr + Math.Max(0.0, activeCalories - deficitCap);
+        return Math.Max(target, bmr);
+    }
 
     /// <summary>
     /// Monthly gain rate = (currentAvg - previousAvg) / bodyWeight × 100.

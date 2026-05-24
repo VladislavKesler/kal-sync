@@ -36,10 +36,7 @@ public partial class SettingsViewModel : ObservableObject
     private string _selectedSex = "Male";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(SurplusLabel))]
-    private double _surplusPercent;
-
-    public string SurplusLabel => SurplusPercent >= 0 ? "Überschuss" : "Defizit";
+    private double _deficitCap;
 
     [ObservableProperty]
     private string _backendUrl = string.Empty;
@@ -107,7 +104,7 @@ public partial class SettingsViewModel : ObservableObject
         BodyFatPercent      = p.BodyFatPercent;
         AgeDouble           = p.Age;
         SelectedSex         = p.Sex == Sex.Female ? "Female" : "Male";
-        SurplusPercent      = p.SurplusPercent;
+        DeficitCap          = p.DeficitCap;
         BackendUrl          = _profileService.GetBackendUrl();
         UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
         WidgetEnabled       = Preferences.Get("widget.enabled", false);
@@ -133,7 +130,7 @@ public partial class SettingsViewModel : ObservableObject
             BodyFatPercent = BodyFatPercent,
             Age            = (int)Math.Round(AgeDouble),
             Sex            = SelectedSex == "Female" ? Sex.Female : Sex.Male,
-            SurplusPercent = SurplusPercent,
+            DeficitCap     = DeficitCap,
         });
 
         _notificationService.ReminderEnabled = MeasurementReminderEnabled;

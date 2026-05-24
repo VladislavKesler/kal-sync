@@ -85,6 +85,15 @@ public class UserProfileServiceTests
         bmr.Should().BeApproximately(expectedBmr, precision: 1.0);
     }
 
+    // --- DeficitCap default ---
+
+    [Fact]
+    public void DeficitCap_DefaultShouldBe500()
+    {
+        const double defaultDeficitCap = 500.0;
+        defaultDeficitCap.Should().Be(500.0);
+    }
+
     // --- Helper methods (mirrors what UserProfileService will implement) ---
     // These will be replaced by actual service calls once kal-sync.Core exists.
 

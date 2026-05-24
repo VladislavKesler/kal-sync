@@ -18,6 +18,6 @@ public class UserProfile
 
     public Sex Sex { get; set; } = Sex.Male;
 
-    /// <summary>Caloric surplus on top of TDEE, in percent (e.g. 5 = +5%).</summary>
-    public double SurplusPercent { get; set; } = 5.0;
+    /// <summary>Active calories that count as deficit and are NOT added back to the target (kcal).</summary>
+    public double DeficitCap { get; set; } = 500.0;
 }

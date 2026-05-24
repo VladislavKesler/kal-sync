@@ -24,13 +24,18 @@ public partial class HomeViewModel : ObservableObject
     // ── Calorie dashboard ────────────────────────────────────────────────────
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TargetKcal))]
+    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
     private double _bmr;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TargetKcal))]
+    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
     private double _activeCalories;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(TargetKcal))]
+    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
+    [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     private double _tdee;
 
     [ObservableProperty]
@@ -38,21 +43,30 @@ public partial class HomeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     [NotifyPropertyChangedFor(nameof(AdjustmentEyebrowLabel))]
     [NotifyPropertyChangedFor(nameof(AdjustmentSubLabel))]
-    private double _surplusPercent;
+    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
+    private double _deficitCap;
 
-    /// <summary>Computed live: TDEE × (1 + SurplusPercent / 100).</summary>
-    public double TargetKcal => GaintainingService.CalculateTargetKcal(Tdee, SurplusPercent);
+    /// <summary>Computed: BMR + max(0, activeCalories − deficitCap), floored at BMR.</summary>
+    public double TargetKcal => GaintainingService.CalculateTargetKcal(Bmr, ActiveCalories, DeficitCap);
 
-    /// <summary>Badge text inside the target ring, e.g. "inkl. 5.0 % Überschuss".</summary>
-    public string SurplusLabel => SurplusPercent >= 0
-        ? $"inkl. {SurplusPercent:F1} % Überschuss"
-        : $"inkl. {Math.Abs(SurplusPercent):F1} % Defizit";
+    /// <summary>Deficit as a % of TDEE — drives the ring's red arc.</summary>
+    public double DeficitPercent => Tdee > 0 ? (Tdee - TargetKcal) / Tdee * 100.0 : 0.0;
 
-    /// <summary>Eyebrow label in the adjustment card ("Überschuss" / "Defizit" / "Erhalt").</summary>
-    public string AdjustmentEyebrowLabel => SurplusPercent > 0 ? "Überschuss" : SurplusPercent < 0 ? "Defizit" : "Erhalt";
+    /// <summary>Badge text inside the target ring, e.g. "− 300 kcal Defizit".</summary>
+    public string SurplusLabel
+    {
+        get
+        {
+            double deficit = Tdee - TargetKcal;
+            return deficit > 0.5 ? $"− {deficit:F0} kcal Defizit" : "Erhalt";
+        }
+    }
 
-    /// <summary>Subtitle in the adjustment card ("Lean Bulk" / "Diät" / "Gleichgewicht").</summary>
-    public string AdjustmentSubLabel => SurplusPercent > 0 ? "Lean Bulk" : SurplusPercent < 0 ? "Diät" : "Gleichgewicht";
+    /// <summary>Eyebrow label in the adjustment card.</summary>
+    public string AdjustmentEyebrowLabel => "Defizit-Cap";
+
+    /// <summary>Subtitle in the adjustment card.</summary>
+    public string AdjustmentSubLabel => "Lean Bulk";
 
     /// <summary>Formatted date shown in the top bar (e.g. "Montag, 27. April").</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -117,13 +131,15 @@ public partial class HomeViewModel : ObservableObject
 
             if (activity != null)
             {
-                Activity        = activity;
-                Bmr             = Math.Round(_userProfileService.GetBmr(profile), 0);
-                ActiveCalories  = activity.CalculatedCalories;
-                Tdee            = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
-                SurplusPercent  = profile.SurplusPercent;
-                HasData         = true;
-                _widgetService.UpdateData(TargetKcal, SurplusPercent);
+                Activity       = activity;
+                Bmr            = Math.Round(_userProfileService.GetBmr(profile), 0);
+                ActiveCalories = activity.CalculatedCalories;
+                Tdee           = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
+                DeficitCap     = profile.DeficitCap;
+                HasData        = true;
+
+                double surplusFrac = Tdee > 0 ? (TargetKcal - Tdee) / Tdee * 100.0 : 0.0;
+                _widgetService.UpdateData(TargetKcal, surplusFrac);
             }
             else
             {
