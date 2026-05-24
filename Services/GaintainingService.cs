@@ -13,14 +13,11 @@ public class GaintainingService
         => bmr + activeCalories;
 
     /// <summary>
-    /// Target = BMR + max(0, activeCalories − deficitCap). Never falls below BMR.
-    /// deficitCap: active kcal counted as deficit and not added back.
+    /// Target = TDEE + calorieAdjustment, never falls below BMR.
+    /// calorieAdjustment: positive = surplus, negative = deficit.
     /// </summary>
-    public static double CalculateTargetKcal(double bmr, double activeCalories, double deficitCap)
-    {
-        double target = bmr + Math.Max(0.0, activeCalories - deficitCap);
-        return Math.Max(target, bmr);
-    }
+    public static double CalculateTargetKcal(double tdee, double calorieAdjustment, double bmr)
+        => Math.Max(tdee + calorieAdjustment, bmr);
 
     /// <summary>
     /// Monthly gain rate = (currentAvg - previousAvg) / bodyWeight × 100.

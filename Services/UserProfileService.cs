@@ -15,7 +15,7 @@ public class UserProfileService
     private const string BodyFatKey = "profile.body_fat_percent";
     private const string AgeKey = "profile.age";
     private const string SexKey = "profile.sex";
-    private const string DeficitCapKey = "profile.deficit_cap";
+    private const string CalorieAdjustmentKey = "profile.calorie_adjustment";
     private const string BackendUrlKey = "profile.backend_url";
 
     // ── Persistence ─────────────────────────────────────────────────────────
@@ -30,7 +30,7 @@ public class UserProfileService
         BodyFatPercent = Preferences.Get(BodyFatKey, 20.0),
         Age            = Preferences.Get(AgeKey, 30),
         Sex            = (Sex)Preferences.Get(SexKey, (int)Sex.Male),
-        DeficitCap     = Preferences.Get(DeficitCapKey, 500.0),
+        CalorieAdjustment = Preferences.Get(CalorieAdjustmentKey, 0.0),
     };
 
     [SuppressMessage("Performance", "CA1822:Mark members as static",
@@ -41,7 +41,7 @@ public class UserProfileService
         Preferences.Set(BodyFatKey, profile.BodyFatPercent);
         Preferences.Set(AgeKey, profile.Age);
         Preferences.Set(SexKey, (int)profile.Sex);
-        Preferences.Set(DeficitCapKey, profile.DeficitCap);
+        Preferences.Set(CalorieAdjustmentKey, profile.CalorieAdjustment);
     }
 
     // ── Backend URL ─────────────────────────────────────────────────────────

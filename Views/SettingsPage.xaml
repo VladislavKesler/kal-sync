@@ -57,6 +57,7 @@
 
             <conv:DoubleToIntStringConverter x:Key="IntStr" />
             <conv:LeanBodyMassConverter      x:Key="Lbm" />
+            <conv:SurplusToColorConverter    x:Key="SurplusColor" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -159,22 +160,24 @@
                     <VerticalStackLayout Spacing="10">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
-                                   Text="Defizit-Cap" VerticalOptions="Center" />
+                                   Text="Kalorien-Anpassung" VerticalOptions="Center" />
                             <Label Grid.Column="1"
                                    FontFamily="{StaticResource MonoFont}" FontSize="16"
-                                   TextColor="{StaticResource Ink}"
-                                   Text="{Binding DeficitCap, StringFormat='{0:F0} kcal'}" />
+                                   TextColor="{Binding CalorieAdjustment,
+                                               Converter={StaticResource SurplusColor},
+                                               ConverterParameter=fg}"
+                                   Text="{Binding CalorieAdjustment, StringFormat='{0:+0;-0;0} kcal'}" />
                         </Grid>
-                        <Slider Minimum="0" Maximum="500"
-                                Value="{Binding DeficitCap, Mode=TwoWay}"
+                        <Slider Minimum="-500" Maximum="500"
+                                Value="{Binding CalorieAdjustment, Mode=TwoWay}"
                                 MinimumTrackColor="{StaticResource Accent}"
                                 MaximumTrackColor="{StaticResource Hairline}"
                                 ThumbColor="{StaticResource AccentInk}" />
                         <Grid ColumnDefinitions="*,*,*">
-                            <Label Grid.Column="0" Style="{StaticResource Eyebrow}" Text="0 kcal" />
-                            <Label Grid.Column="1" Style="{StaticResource Eyebrow}" Text="250 kcal"
+                            <Label Grid.Column="0" Style="{StaticResource Eyebrow}" Text="−500 kcal" />
+                            <Label Grid.Column="1" Style="{StaticResource Eyebrow}" Text="0"
                                    HorizontalOptions="Center" />
-                            <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="500 kcal"
+                            <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="+500 kcal"
                                    HorizontalOptions="End" />
                         </Grid>
                     </VerticalStackLayout>

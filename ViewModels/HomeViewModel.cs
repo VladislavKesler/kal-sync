@@ -25,16 +25,17 @@ public partial class HomeViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TargetKcal))]
-    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
+    [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
     private double _bmr;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TargetKcal))]
-    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
+    [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
     private double _activeCalories;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
+    [NotifyPropertyChangedFor(nameof(TargetKcal))]
+    [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
     [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     private double _tdee;
 
@@ -43,34 +44,31 @@ public partial class HomeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     [NotifyPropertyChangedFor(nameof(AdjustmentEyebrowLabel))]
     [NotifyPropertyChangedFor(nameof(AdjustmentSubLabel))]
-    [NotifyPropertyChangedFor(nameof(DeficitPercent))]
-    private double _deficitCap;
+    [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
+    private double _calorieAdjustment;
 
-    /// <summary>Computed: BMR + max(0, activeCalories − deficitCap), floored at BMR.</summary>
-    public double TargetKcal => GaintainingService.CalculateTargetKcal(Bmr, ActiveCalories, DeficitCap);
+    /// <summary>Computed: TDEE + calorieAdjustment, floored at BMR.</summary>
+    public double TargetKcal => GaintainingService.CalculateTargetKcal(Tdee, CalorieAdjustment, Bmr);
 
-    /// <summary>Deficit as a % of TDEE — drives the ring's red arc.</summary>
-    public double DeficitPercent => Tdee > 0 ? (Tdee - TargetKcal) / Tdee * 100.0 : 0.0;
+    /// <summary>Signed % of TDEE — drives the ring arc (positive = green, negative = red).</summary>
+    public double AdjustmentPercent => Tdee > 0 ? CalorieAdjustment / Tdee * 100.0 : 0.0;
 
-    /// <summary>Badge text inside the target ring, e.g. "− 300 kcal Defizit".</summary>
-    public string SurplusLabel
-    {
-        get
-        {
-            double deficit = Tdee - TargetKcal;
-            return deficit > 0.5 ? $"− {deficit:F0} kcal Defizit" : "Erhalt";
-        }
-    }
+    /// <summary>Badge text inside the target ring.</summary>
+    public string SurplusLabel => CalorieAdjustment > 0.5
+        ? $"+ {CalorieAdjustment:F0} kcal Überschuss"
+        : CalorieAdjustment < -0.5
+            ? $"− {Math.Abs(CalorieAdjustment):F0} kcal Defizit"
+            : "Erhalt";
 
     /// <summary>Eyebrow label in the adjustment card.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
         Justification = "XAML compiled bindings require instance properties.")]
-    public string AdjustmentEyebrowLabel => "Defizit-Cap";
+    public string AdjustmentEyebrowLabel => CalorieAdjustment > 0 ? "Überschuss" : CalorieAdjustment < 0 ? "Defizit" : "Erhalt";
 
     /// <summary>Subtitle in the adjustment card.</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
         Justification = "XAML compiled bindings require instance properties.")]
-    public string AdjustmentSubLabel => "Lean Bulk";
+    public string AdjustmentSubLabel => CalorieAdjustment > 0 ? "Lean Bulk" : CalorieAdjustment < 0 ? "Diät" : "Gleichgewicht";
 
     /// <summary>Formatted date shown in the top bar (e.g. "Montag, 27. April").</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
@@ -135,12 +133,12 @@ public partial class HomeViewModel : ObservableObject
 
             if (activity != null)
             {
-                Activity       = activity;
-                Bmr            = Math.Round(_userProfileService.GetBmr(profile), 0);
-                ActiveCalories = activity.CalculatedCalories;
-                Tdee           = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
-                DeficitCap     = profile.DeficitCap;
-                HasData        = true;
+                Activity          = activity;
+                Bmr               = Math.Round(_userProfileService.GetBmr(profile), 0);
+                ActiveCalories    = activity.CalculatedCalories;
+                Tdee              = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
+                CalorieAdjustment = profile.CalorieAdjustment;
+                HasData           = true;
 
                 double surplusFrac = Tdee > 0 ? (TargetKcal - Tdee) / Tdee * 100.0 : 0.0;
                 _widgetService.UpdateData(TargetKcal, surplusFrac);

@@ -2,23 +2,23 @@ namespace kal_sync.Converters;
 
 /// <summary>
 /// Custom IDrawable for the home-screen hero ring.
-/// Renders a 14 px wide donut arc: dark portion = target share of TDEE, red = deficit arc.
-/// Set DeficitPercent from code-behind and call GraphicsView.Invalidate() to refresh.
+/// Renders a 14 px wide donut arc: dark = TDEE share, green = surplus arc, red = deficit arc.
+/// Set AdjustmentPercent from code-behind and call GraphicsView.Invalidate() to refresh.
 /// </summary>
 public class TargetRingDrawable : BindableObject, IDrawable
 {
-    public static readonly BindableProperty DeficitPercentProperty =
+    public static readonly BindableProperty AdjustmentPercentProperty =
         BindableProperty.Create(
-            nameof(DeficitPercent),
+            nameof(AdjustmentPercent),
             typeof(double),
             typeof(TargetRingDrawable),
             defaultValue: 0.0);
 
-    /// <summary>Deficit as a percentage of TDEE (0–100). Always ≥ 0.</summary>
-    public double DeficitPercent
+    /// <summary>Signed % of TDEE: positive = surplus (green arc), negative = deficit (red arc).</summary>
+    public double AdjustmentPercent
     {
-        get => (double)GetValue(DeficitPercentProperty);
-        set => SetValue(DeficitPercentProperty, value);
+        get => (double)GetValue(AdjustmentPercentProperty);
+        set => SetValue(AdjustmentPercentProperty, value);
     }
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
@@ -36,10 +36,10 @@ public class TargetRingDrawable : BindableObject, IDrawable
         canvas.StrokeColor = Color.FromArgb("#E2E5EA");
         canvas.DrawCircle(cx, cy, r);
 
-        var deficitFrac = (float)Math.Clamp(DeficitPercent / 100.0, 0.0, 0.99);
-        var baseFrac    = 1f - deficitFrac;
+        var adjustFrac = (float)Math.Clamp(Math.Abs(AdjustmentPercent) / 100.0, 0.0, 0.99);
+        var baseFrac   = 1f - adjustFrac;
 
-        // 2. Target arc (dark ink — calories the user should eat)
+        // 2. TDEE arc (dark ink)
         canvas.StrokeColor = Color.FromArgb("#1A1F2A");
         canvas.DrawArc(
             cx - r, cy - r, r * 2, r * 2,
@@ -48,14 +48,16 @@ public class TargetRingDrawable : BindableObject, IDrawable
             clockwise:  true,
             closed:     false);
 
-        // 3. Deficit arc (danger red — calories not added back)
-        if (deficitFrac > 0f)
+        // 3. Adjustment arc (green = surplus, red = deficit)
+        if (adjustFrac > 0f)
         {
-            canvas.StrokeColor = Color.FromArgb("#C0533A");
+            canvas.StrokeColor = AdjustmentPercent >= 0
+                ? Color.FromArgb("#A8D86A")
+                : Color.FromArgb("#C0533A");
             canvas.DrawArc(
                 cx - r, cy - r, r * 2, r * 2,
                 startAngle: 90f - 360f * baseFrac,
-                endAngle:   90f - 360f * (baseFrac + deficitFrac),
+                endAngle:   90f - 360f * (baseFrac + adjustFrac),
                 clockwise:  true,
                 closed:     false);
         }

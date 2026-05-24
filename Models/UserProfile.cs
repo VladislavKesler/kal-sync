@@ -18,6 +18,6 @@ public class UserProfile
 
     public Sex Sex { get; set; } = Sex.Male;
 
-    /// <summary>Active calories that count as deficit and are NOT added back to the target (kcal).</summary>
-    public double DeficitCap { get; set; } = 500.0;
+    /// <summary>Calorie adjustment added to TDEE (positive = surplus, negative = deficit). Floored at BMR.</summary>
+    public double CalorieAdjustment { get; set; } = 0.0;
 }

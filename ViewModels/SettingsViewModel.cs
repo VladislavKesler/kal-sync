@@ -36,7 +36,7 @@ public partial class SettingsViewModel : ObservableObject
     private string _selectedSex = "Male";
 
     [ObservableProperty]
-    private double _deficitCap;
+    private double _calorieAdjustment;
 
     [ObservableProperty]
     private string _backendUrl = string.Empty;
@@ -104,7 +104,7 @@ public partial class SettingsViewModel : ObservableObject
         BodyFatPercent      = p.BodyFatPercent;
         AgeDouble           = p.Age;
         SelectedSex         = p.Sex == Sex.Female ? "Female" : "Male";
-        DeficitCap          = p.DeficitCap;
+        CalorieAdjustment   = p.CalorieAdjustment;
         BackendUrl          = _profileService.GetBackendUrl();
         UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
         WidgetEnabled       = Preferences.Get("widget.enabled", false);
@@ -130,7 +130,7 @@ public partial class SettingsViewModel : ObservableObject
             BodyFatPercent = BodyFatPercent,
             Age            = (int)Math.Round(AgeDouble),
             Sex            = SelectedSex == "Female" ? Sex.Female : Sex.Male,
-            DeficitCap     = DeficitCap,
+            CalorieAdjustment = CalorieAdjustment,
         });
 
         _notificationService.ReminderEnabled = MeasurementReminderEnabled;
