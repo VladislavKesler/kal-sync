@@ -16,6 +16,7 @@ public class WidgetService
     private const string SurplusKey      = "widget.surplus_percent";
 
 #if ANDROID
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Instance method for DI / testability")]
     public void UpdateData(double targetKcal, double surplusPercent)
     {
         var context = Android.App.Application.Context;
@@ -37,11 +38,12 @@ public class WidgetService
         context.SendBroadcast(intent);
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Instance method for DI / testability")]
     public void RequestPinWidget()
     {
         if (Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.O) return;
 
-        var context  = Application.Context;
+        var context  = Android.App.Application.Context;
         var manager  = AppWidgetManager.GetInstance(context)!;
         var provider = new ComponentName(context, Java.Lang.Class.FromType(typeof(KalSyncWidgetProvider)));
 

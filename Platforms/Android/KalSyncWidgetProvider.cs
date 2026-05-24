@@ -41,9 +41,10 @@ public class KalSyncWidgetProvider : AppWidgetProvider
             views.SetTextViewText(Resource.Id.widget_status, statusText);
             views.SetInt(Resource.Id.widget_status, "setTextColor", statusColor);
 
-            // Tap opens the app — Immutable flag requires API 23+
+            // Tap opens the app — Immutable flag requires API 23+;
+            // OperatingSystem.IsAndroidVersionAtLeast() is the analyzer-recognised platform guard
             var launchIntent = new Intent(context, typeof(MainActivity));
-            var flags = Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M
+            var flags = OperatingSystem.IsAndroidVersionAtLeast(23)
                 ? PendingIntentFlags.Immutable
                 : PendingIntentFlags.UpdateCurrent;
             var pendingIntent = PendingIntent.GetActivity(context, 0, launchIntent, flags);
