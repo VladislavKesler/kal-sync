@@ -3,7 +3,6 @@ using kal_sync.ViewModels;
 using kal_sync.Views;
 using Microsoft.Maui.Controls.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Plugin.LocalNotification;
 
 namespace kal_sync;
 
@@ -15,7 +14,6 @@ public static class MauiProgram
 
         builder
             .UseMauiApp<App>()
-            .UseLocalNotification()
             .ConfigureFonts(fonts =>
             {
                 fonts.AddFont("OpenSans-Regular.ttf",        "OpenSansRegular");

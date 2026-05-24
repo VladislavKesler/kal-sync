@@ -82,8 +82,6 @@
 		<!-- Velopack: auto-updater for Windows builds only -->
 		<PackageReference Include="Velopack" Version="0.0.942"
 		                  Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'" />
-		<!-- Local push notifications (Android, iOS, Windows) -->
-		<PackageReference Include="Plugin.LocalNotification" Version="2.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
