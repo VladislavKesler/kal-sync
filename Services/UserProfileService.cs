@@ -53,7 +53,7 @@ public class UserProfileService
 #if DEBUG && ANDROID
         const string defaultUrl = "http://10.0.2.2:8000";
 #else
-        const string defaultUrl = "http://localhost:8000";
+        const string defaultUrl = "https://kal-sync-backend.onrender.com";
 #endif
         return Preferences.Get(BackendUrlKey, defaultUrl);
     }
