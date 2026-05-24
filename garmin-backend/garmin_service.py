@@ -25,8 +25,8 @@ class GarminService:
         client = self._ensure_logged_in()
         stats = client.get_stats(date.today().isoformat())
         return {
-            "resting_hr": int(stats.get("restingHeartRate", 60)),
-            "active_calories": int(stats.get("activeKilocalories", 0)),
+            "resting_hr": int(stats.get("restingHeartRate") or 60),
+            "active_calories": int(stats.get("activeKilocalories") or 0),
         }
 
     async def get_latest_activity(self) -> dict[str, Any]:
@@ -39,13 +39,13 @@ class GarminService:
         activity = activities[0]
         logger.debug("Fetched activity: %s", activity.get("activityId"))
 
-        max_hr = int(activity.get("maxHR", 0)) or 181
+        max_hr = int(activity.get("maxHR") or 0) or 181
 
         return {
-            "duration_minutes": int(activity.get("duration", 0) / 60),
-            "avg_hr": int(activity.get("averageHR", 0)),
+            "duration_minutes": int((activity.get("duration") or 0) / 60),
+            "avg_hr": int(activity.get("averageHR") or 0),
             "max_hr": max_hr,
-            "garmin_calories": float(activity.get("calories", 0)),
+            "garmin_calories": float(activity.get("calories") or 0),
             "activity_date": activity.get("startTimeLocal", date.today().isoformat())[
                 :10
             ],
@@ -57,6 +57,6 @@ class GarminService:
 
     def _extract_zones(self, activity: dict[str, Any]) -> dict[str, int]:
         return {
-            f"zone{i}_minutes": int(activity.get(f"hrTimeInZone_{i}", 0) / 60)
+            f"zone{i}_minutes": int((activity.get(f"hrTimeInZone_{i}") or 0) / 60)
             for i in range(1, 6)
         }
