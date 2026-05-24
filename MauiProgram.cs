@@ -30,6 +30,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<GaintainingService>();
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddSingleton<NotificationService>();
+        builder.Services.AddSingleton<UpdateService>();
 
         // ── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomeViewModel>();

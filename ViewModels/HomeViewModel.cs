@@ -18,6 +18,7 @@ public partial class HomeViewModel : ObservableObject
 {
     private readonly GarminApiService _apiService;
     private readonly UserProfileService _userProfileService;
+    private readonly UpdateService _updateService;
 
     // ── Calorie dashboard ────────────────────────────────────────────────────
 
@@ -74,12 +75,28 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasData;
 
+    // ── Update ──────────────────────────────────────────────────────────────────
+
+    [ObservableProperty]
+    private bool _updateAvailable;
+
+    [ObservableProperty]
+    private string _availableVersion = string.Empty;
+
+    [ObservableProperty]
+    private bool _isDownloadingUpdate;
+
+    [ObservableProperty]
+    private int _updateProgress;
+
     private DateTime _lastLoaded = DateTime.MinValue;
 
-    public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService)
+    public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService,
+                         UpdateService updateService)
     {
-        _apiService = apiService;
+        _apiService         = apiService;
         _userProfileService = userProfileService;
+        _updateService      = updateService;
     }
 
     /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
@@ -137,5 +154,34 @@ public partial class HomeViewModel : ObservableObject
     {
         if (!HasData || (DateTime.Now - _lastLoaded).TotalMinutes >= 30)
             await LoadLatestActivity();
+
+        // Non-blocking: check for update in background after data is loaded
+        _ = CheckForUpdateInBackgroundAsync();
+    }
+
+    private async Task CheckForUpdateInBackgroundAsync()
+    {
+        var version = await _updateService.CheckForUpdateAsync();
+        if (version is not null)
+        {
+            AvailableVersion = version;
+            UpdateAvailable  = true;
+        }
+    }
+
+    [RelayCommand]
+    private async Task DownloadAndRestart()
+    {
+        IsDownloadingUpdate = true;
+        try
+        {
+            var progress = new Progress<int>(p => UpdateProgress = p);
+            await _updateService.DownloadAndRestartAsync(progress);
+        }
+        catch
+        {
+            // If download fails, reset state so user can retry
+            IsDownloadingUpdate = false;
+        }
     }
 }
