@@ -19,6 +19,7 @@ public partial class HomeViewModel : ObservableObject
     private readonly GarminApiService _apiService;
     private readonly UserProfileService _userProfileService;
     private readonly UpdateService _updateService;
+    private readonly WidgetService _widgetService;
 
     // ── Calorie dashboard ────────────────────────────────────────────────────
 
@@ -92,11 +93,12 @@ public partial class HomeViewModel : ObservableObject
     private DateTime _lastLoaded = DateTime.MinValue;
 
     public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService,
-                         UpdateService updateService)
+                         UpdateService updateService, WidgetService widgetService)
     {
         _apiService         = apiService;
         _userProfileService = userProfileService;
         _updateService      = updateService;
+        _widgetService      = widgetService;
     }
 
     /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
@@ -121,6 +123,7 @@ public partial class HomeViewModel : ObservableObject
                 Tdee            = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
                 SurplusPercent  = profile.SurplusPercent;
                 HasData         = true;
+                _widgetService.UpdateData(TargetKcal, SurplusPercent);
             }
             else
             {

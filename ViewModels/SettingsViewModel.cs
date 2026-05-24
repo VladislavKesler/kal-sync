@@ -11,6 +11,10 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly UserProfileService _profileService;
     private readonly NotificationService _notificationService;
+    private readonly WidgetService _widgetService;
+
+    // Prevents RequestPinWidget() from firing during initial profile load
+    private bool _profileLoaded;
 
     private static readonly int[] IntervalDays = [1, 3, 7, 14, 30];
 
@@ -53,6 +57,18 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedReminderInterval = "Wöchentlich";
 
+    // ── Widget ───────────────────────────────────────────────────────────────
+
+    [ObservableProperty]
+    private bool _widgetEnabled;
+
+    partial void OnWidgetEnabledChanged(bool value)
+    {
+        Preferences.Set("widget.enabled", value);
+        if (value && _profileLoaded)
+            _widgetService.RequestPinWidget();
+    }
+
     // ── Derived display ──────────────────────────────────────────────────────
 
     /// <summary>Katch-McArdle BMR, recomputed whenever weight or body-fat changes.</summary>
@@ -74,24 +90,28 @@ public partial class SettingsViewModel : ObservableObject
 
     // ── Constructor ──────────────────────────────────────────────────────────
 
-    public SettingsViewModel(UserProfileService profileService, NotificationService notificationService)
+    public SettingsViewModel(UserProfileService profileService, NotificationService notificationService,
+                             WidgetService widgetService)
     {
         _profileService      = profileService;
         _notificationService = notificationService;
+        _widgetService       = widgetService;
         LoadProfile();
         LoadNotificationSettings();
     }
 
     private void LoadProfile()
     {
-        var p          = _profileService.Load();
-        WeightKg       = p.WeightKg;
-        BodyFatPercent = p.BodyFatPercent;
-        AgeDouble      = p.Age;
-        SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
-        SurplusPercent = p.SurplusPercent;
-        BackendUrl        = _profileService.GetBackendUrl();
+        var p               = _profileService.Load();
+        WeightKg            = p.WeightKg;
+        BodyFatPercent      = p.BodyFatPercent;
+        AgeDouble           = p.Age;
+        SelectedSex         = p.Sex == Sex.Female ? "Female" : "Male";
+        SurplusPercent      = p.SurplusPercent;
+        BackendUrl          = _profileService.GetBackendUrl();
         UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
+        WidgetEnabled       = Preferences.Get("widget.enabled", false);
+        _profileLoaded      = true;  // Must be set after all properties are loaded
     }
 
     private void LoadNotificationSettings()

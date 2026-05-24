@@ -31,6 +31,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DatabaseService>();
         builder.Services.AddSingleton<NotificationService>();
         builder.Services.AddSingleton<UpdateService>();
+        builder.Services.AddSingleton<WidgetService>();
 
         // ── ViewModels ──────────────────────────────────────────────────────
         builder.Services.AddSingleton<HomeViewModel>();
