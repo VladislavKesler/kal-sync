@@ -41,7 +41,7 @@ public class WidgetService
     [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Instance method for DI / testability")]
     public void RequestPinWidget()
     {
-        if (Android.OS.Build.VERSION.SdkInt < Android.OS.BuildVersionCodes.O) return;
+        if (!OperatingSystem.IsAndroidVersionAtLeast(26)) return;
 
         var context  = Android.App.Application.Context;
         var manager  = AppWidgetManager.GetInstance(context)!;
