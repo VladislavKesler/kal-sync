@@ -49,7 +49,10 @@ public class UpdateService
         _manager.ApplyUpdatesAndRestart(_pendingUpdate);
     }
 #else
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Instance method for DI / testability")]
     public Task<string?> CheckForUpdateAsync() => Task.FromResult<string?>(null);
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822", Justification = "Instance method for DI / testability")]
     public Task DownloadAndRestartAsync(IProgress<int>? progress = null) => Task.CompletedTask;
 #endif
 }
