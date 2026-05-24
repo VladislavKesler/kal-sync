@@ -105,7 +105,7 @@ public partial class SettingsViewModel : ObservableObject
     // ── Commands ─────────────────────────────────────────────────────────────
 
     [RelayCommand]
-    private void Save()
+    private async Task Save()
     {
         _profileService.Save(new UserProfile
         {
@@ -124,5 +124,10 @@ public partial class SettingsViewModel : ObservableObject
 
         if (UsbDebuggingEnabled && !string.IsNullOrWhiteSpace(BackendUrl))
             _profileService.SaveBackendUrl(BackendUrl.TrimEnd('/'));
+
+        await Shell.Current.DisplayAlert(
+            "Gespeichert",
+            "Deine Einstellungen wurden übernommen.",
+            "OK");
     }
 }

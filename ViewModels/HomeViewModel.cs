@@ -172,6 +172,14 @@ public partial class HomeViewModel : ObservableObject
     [RelayCommand]
     private async Task DownloadAndRestart()
     {
+        bool confirmed = await Shell.Current.DisplayAlert(
+            "Update installieren",
+            $"Version {AvailableVersion} wird heruntergeladen. Die App startet danach automatisch neu.",
+            "Installieren",
+            "Abbrechen");
+
+        if (!confirmed) return;
+
         IsDownloadingUpdate = true;
         try
         {
@@ -180,7 +188,6 @@ public partial class HomeViewModel : ObservableObject
         }
         catch
         {
-            // If download fails, reset state so user can retry
             IsDownloadingUpdate = false;
         }
     }
