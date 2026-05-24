@@ -63,9 +63,13 @@ public partial class HomeViewModel : ObservableObject
     }
 
     /// <summary>Eyebrow label in the adjustment card.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "XAML compiled bindings require instance properties.")]
     public string AdjustmentEyebrowLabel => "Defizit-Cap";
 
     /// <summary>Subtitle in the adjustment card.</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "XAML compiled bindings require instance properties.")]
     public string AdjustmentSubLabel => "Lean Bulk";
 
     /// <summary>Formatted date shown in the top bar (e.g. "Montag, 27. April").</summary>
