@@ -181,8 +181,8 @@
                         <VerticalStackLayout Spacing="12">
                             <Grid ColumnDefinitions="*,Auto">
                                 <VerticalStackLayout Grid.Column="0" Spacing="2">
-                                    <Label Style="{StaticResource Eyebrow}" Text="Überschuss" />
-                                    <Label FontSize="13" TextColor="{StaticResource Ink}" Text="Lean Bulk" />
+                                    <Label Style="{StaticResource Eyebrow}" Text="{Binding AdjustmentEyebrowLabel}" />
+                                    <Label FontSize="13" TextColor="{StaticResource Ink}" Text="{Binding AdjustmentSubLabel}" />
                                 </VerticalStackLayout>
                                 <Label Grid.Column="1"
                                        FontFamily="{StaticResource MonoFont}" FontSize="22"

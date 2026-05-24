@@ -32,7 +32,10 @@ public partial class SettingsViewModel : ObservableObject
     private string _selectedSex = "Male";
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SurplusLabel))]
     private double _surplusPercent;
+
+    public string SurplusLabel => SurplusPercent >= 0 ? "Überschuss" : "Defizit";
 
     [ObservableProperty]
     private string _backendUrl = string.Empty;

@@ -34,15 +34,23 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TargetKcal))]
     [NotifyPropertyChangedFor(nameof(SurplusLabel))]
+    [NotifyPropertyChangedFor(nameof(AdjustmentEyebrowLabel))]
+    [NotifyPropertyChangedFor(nameof(AdjustmentSubLabel))]
     private double _surplusPercent;
 
     /// <summary>Computed live: TDEE × (1 + SurplusPercent / 100).</summary>
     public double TargetKcal => GaintainingService.CalculateTargetKcal(Tdee, SurplusPercent);
 
-    /// <summary>Shows "Überschuss" or "Defizit" depending on the sign of SurplusPercent.</summary>
+    /// <summary>Badge text inside the target ring, e.g. "inkl. 5.0 % Überschuss".</summary>
     public string SurplusLabel => SurplusPercent >= 0
         ? $"inkl. {SurplusPercent:F1} % Überschuss"
         : $"inkl. {Math.Abs(SurplusPercent):F1} % Defizit";
+
+    /// <summary>Eyebrow label in the adjustment card ("Überschuss" / "Defizit" / "Erhalt").</summary>
+    public string AdjustmentEyebrowLabel => SurplusPercent > 0 ? "Überschuss" : SurplusPercent < 0 ? "Defizit" : "Erhalt";
+
+    /// <summary>Subtitle in the adjustment card ("Lean Bulk" / "Diät" / "Gleichgewicht").</summary>
+    public string AdjustmentSubLabel => SurplusPercent > 0 ? "Lean Bulk" : SurplusPercent < 0 ? "Diät" : "Gleichgewicht";
 
     /// <summary>Formatted date shown in the top bar (e.g. "Montag, 27. April").</summary>
     [System.Diagnostics.CodeAnalysis.SuppressMessage(
