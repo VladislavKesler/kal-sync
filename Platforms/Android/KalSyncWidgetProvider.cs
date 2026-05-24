@@ -1,3 +1,4 @@
+using System.Globalization;
 using Android.App;
 using Android.Appwidget;
 using Android.Content;
@@ -20,7 +21,7 @@ public class KalSyncWidgetProvider : AppWidgetProvider
         float surplus = prefs?.GetFloat(SurplusKey, 0f) ?? 0f;
         bool hasData  = kcal > 0f;
 
-        string kcalText   = hasData ? ((int)kcal).ToString() : "–";
+        string kcalText   = hasData ? ((int)kcal).ToString(CultureInfo.InvariantCulture) : "–";
         string statusText = hasData
             ? surplus > 0f ? $"+{surplus:F1}% Überschuss"
             : surplus < 0f ? $"{surplus:F1}% Defizit"
@@ -40,10 +41,12 @@ public class KalSyncWidgetProvider : AppWidgetProvider
             views.SetTextViewText(Resource.Id.widget_status, statusText);
             views.SetInt(Resource.Id.widget_status, "setTextColor", statusColor);
 
-            // Tap opens the app
-            var launchIntent  = new Intent(context, typeof(MainActivity));
-            var pendingIntent = PendingIntent.GetActivity(
-                context, 0, launchIntent, PendingIntentFlags.Immutable);
+            // Tap opens the app — Immutable flag requires API 23+
+            var launchIntent = new Intent(context, typeof(MainActivity));
+            var flags = Android.OS.Build.VERSION.SdkInt >= Android.OS.BuildVersionCodes.M
+                ? PendingIntentFlags.Immutable
+                : PendingIntentFlags.UpdateCurrent;
+            var pendingIntent = PendingIntent.GetActivity(context, 0, launchIntent, flags);
             views.SetOnClickPendingIntent(Resource.Id.widget_root, pendingIntent);
 
             appWidgetManager.UpdateAppWidget(widgetId, views);

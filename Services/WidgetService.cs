@@ -1,5 +1,4 @@
 #if ANDROID
-using Android.App;
 using Android.Appwidget;
 using Android.Content;
 #endif
@@ -19,7 +18,7 @@ public class WidgetService
 #if ANDROID
     public void UpdateData(double targetKcal, double surplusPercent)
     {
-        var context = Application.Context;
+        var context = Android.App.Application.Context;
         context
             .GetSharedPreferences(SharedPrefsName, FileCreationMode.Private)!
             .Edit()!
