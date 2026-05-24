@@ -54,6 +54,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _selectedReminderInterval = "Wöchentlich";
 
+    [ObservableProperty]
+    private bool _eveningCheckEnabled;
+
+    [ObservableProperty]
+    private string _selectedEveningCheckTime = "20:00";
+
     // ── Widget ───────────────────────────────────────────────────────────────
 
     [ObservableProperty]
@@ -85,6 +91,9 @@ public partial class SettingsViewModel : ObservableObject
     public List<string> ReminderIntervalOptions { get; } =
         ["Täglich", "Alle 3 Tage", "Wöchentlich", "Alle 2 Wochen", "Monatlich"];
 
+    public List<string> EveningCheckTimeOptions { get; } =
+        ["18:00", "19:00", "20:00", "21:00", "22:00"];
+
     // ── Constructor ──────────────────────────────────────────────────────────
 
     public SettingsViewModel(UserProfileService profileService, NotificationService notificationService,
@@ -113,10 +122,12 @@ public partial class SettingsViewModel : ObservableObject
 
     private void LoadNotificationSettings()
     {
-        MeasurementReminderEnabled = _notificationService.ReminderEnabled;
+        MeasurementReminderEnabled  = _notificationService.ReminderEnabled;
         int days = _notificationService.ReminderIntervalDays;
         int idx  = Array.IndexOf(IntervalDays, days);
-        SelectedReminderInterval = idx >= 0 ? ReminderIntervalOptions[idx] : "Wöchentlich";
+        SelectedReminderInterval    = idx >= 0 ? ReminderIntervalOptions[idx] : "Wöchentlich";
+        EveningCheckEnabled         = _notificationService.EveningCheckEnabled;
+        SelectedEveningCheckTime    = $"{_notificationService.EveningCheckHour:00}:00";
     }
 
     // ── Commands ─────────────────────────────────────────────────────────────
@@ -133,9 +144,11 @@ public partial class SettingsViewModel : ObservableObject
             CalorieAdjustment = CalorieAdjustment,
         });
 
-        _notificationService.ReminderEnabled = MeasurementReminderEnabled;
+        _notificationService.ReminderEnabled      = MeasurementReminderEnabled;
         int idx = ReminderIntervalOptions.IndexOf(SelectedReminderInterval);
         _notificationService.ReminderIntervalDays = idx >= 0 ? IntervalDays[idx] : 7;
+        _notificationService.EveningCheckEnabled  = EveningCheckEnabled;
+        _notificationService.EveningCheckHour     = ParseHour(SelectedEveningCheckTime);
 
         Preferences.Set("dev.usb_debugging", UsbDebuggingEnabled);
 
@@ -147,4 +160,8 @@ public partial class SettingsViewModel : ObservableObject
             "Deine Einstellungen wurden übernommen.",
             "OK");
     }
+
+    // Parses "20:00" → 20
+    private static int ParseHour(string timeString)
+        => int.TryParse(timeString.Split(':')[0], out int h) ? h : 20;
 }
