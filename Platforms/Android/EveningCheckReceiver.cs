@@ -21,7 +21,11 @@ public class EveningCheckReceiver : BroadcastReceiver
             nm?.CreateNotificationChannel(channel);
         }
 
-        var notification = new Notification.Builder(context, ChannelId)
+        var builder = OperatingSystem.IsAndroidVersionAtLeast(26)
+            ? new Notification.Builder(context, ChannelId)
+            : new Notification.Builder(context);
+
+        var notification = builder
             .SetSmallIcon(Android.Resource.Drawable.IcDialogEmail)
             .SetContentTitle(intent.GetStringExtra("title"))
             .SetContentText(intent.GetStringExtra("body"))
