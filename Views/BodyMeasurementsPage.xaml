@@ -135,49 +135,25 @@
                           Margin="4,0">
                         <Button Grid.Column="0" Text="7T"
                                 Command="{Binding SelectTabCommand}" CommandParameter="0"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Muted}"
+                                BackgroundColor="{Binding Tab0Bg}"
+                                TextColor="{Binding Tab0Fg}"
                                 FontFamily="{StaticResource UiFont}"
                                 FontSize="12" FontAttributes="Bold"
-                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button"
-                                             Binding="{Binding IsTab0Active}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
-                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0" />
                         <Button Grid.Column="1" Text="4W"
                                 Command="{Binding SelectTabCommand}" CommandParameter="1"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Muted}"
+                                BackgroundColor="{Binding Tab1Bg}"
+                                TextColor="{Binding Tab1Fg}"
                                 FontFamily="{StaticResource UiFont}"
                                 FontSize="12" FontAttributes="Bold"
-                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button"
-                                             Binding="{Binding IsTab1Active}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
-                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0" />
                         <Button Grid.Column="2" Text="4M"
                                 Command="{Binding SelectTabCommand}" CommandParameter="2"
-                                BackgroundColor="Transparent"
-                                TextColor="{StaticResource Muted}"
+                                BackgroundColor="{Binding Tab2Bg}"
+                                TextColor="{Binding Tab2Fg}"
                                 FontFamily="{StaticResource UiFont}"
                                 FontSize="12" FontAttributes="Bold"
-                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
-                            <Button.Triggers>
-                                <DataTrigger TargetType="Button"
-                                             Binding="{Binding IsTab2Active}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
-                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
-                                </DataTrigger>
-                            </Button.Triggers>
-                        </Button>
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0" />
                     </Grid>
 
                     <GraphicsView x:Name="BalanceChartView"

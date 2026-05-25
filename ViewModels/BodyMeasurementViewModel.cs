@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using kal_sync.Converters;
 using kal_sync.Models;
 using kal_sync.Services;
+using Microsoft.Maui.Graphics;
 
 namespace kal_sync.ViewModels;
 
@@ -23,11 +24,28 @@ public partial class BodyMeasurementViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsTab0Active))]
     [NotifyPropertyChangedFor(nameof(IsTab1Active))]
     [NotifyPropertyChangedFor(nameof(IsTab2Active))]
+    [NotifyPropertyChangedFor(nameof(Tab0Bg))]
+    [NotifyPropertyChangedFor(nameof(Tab0Fg))]
+    [NotifyPropertyChangedFor(nameof(Tab1Bg))]
+    [NotifyPropertyChangedFor(nameof(Tab1Fg))]
+    [NotifyPropertyChangedFor(nameof(Tab2Bg))]
+    [NotifyPropertyChangedFor(nameof(Tab2Fg))]
     private int _selectedTabIndex;
+
+    private static readonly Color _inkColor   = Color.FromArgb("#1A1F2A");
+    private static readonly Color _bgColor    = Color.FromArgb("#F7F8FA");
+    private static readonly Color _mutedColor = Color.FromArgb("#6B7280");
 
     public bool IsTab0Active => SelectedTabIndex == 0;
     public bool IsTab1Active => SelectedTabIndex == 1;
     public bool IsTab2Active => SelectedTabIndex == 2;
+
+    public Color Tab0Bg => SelectedTabIndex == 0 ? _inkColor : Colors.Transparent;
+    public Color Tab0Fg => SelectedTabIndex == 0 ? _bgColor  : _mutedColor;
+    public Color Tab1Bg => SelectedTabIndex == 1 ? _inkColor : Colors.Transparent;
+    public Color Tab1Fg => SelectedTabIndex == 1 ? _bgColor  : _mutedColor;
+    public Color Tab2Bg => SelectedTabIndex == 2 ? _inkColor : Colors.Transparent;
+    public Color Tab2Fg => SelectedTabIndex == 2 ? _bgColor  : _mutedColor;
 
     /// <summary>Set by LoadAsync when the measurement reminder interval has elapsed.
     /// Code-behind watches this and shows a DisplayAlert, then resets it to null.</summary>
@@ -99,10 +117,13 @@ public partial class BodyMeasurementViewModel : ObservableObject
     private void ToggleForm() => IsFormVisible = !IsFormVisible;
 
     [RelayCommand]
-    private async Task SelectTab(int index)
+    private async Task SelectTab(string indexStr)
     {
-        SelectedTabIndex = index;
-        await LoadBalanceChartAsync();
+        if (int.TryParse(indexStr, out int index))
+        {
+            SelectedTabIndex = index;
+            await LoadBalanceChartAsync();
+        }
     }
 
     private async Task LoadBalanceChartAsync()
