@@ -16,11 +16,11 @@ namespace kal_sync.ViewModels;
 /// </summary>
 public partial class HomeViewModel : ObservableObject
 {
-    private readonly GarminApiService _apiService;
-    private readonly UserProfileService _userProfileService;
-    private readonly UpdateService _updateService;
-    private readonly WidgetService _widgetService;
+    private readonly GarminApiService    _apiService;
+    private readonly UserProfileService  _userProfileService;
+    private readonly WidgetService       _widgetService;
     private readonly NotificationService _notificationService;
+    private readonly WorkerDataService   _workerDataService;
 
     // ── Calorie dashboard ────────────────────────────────────────────────────
 
@@ -93,31 +93,20 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     private bool _hasData;
 
-    // ── Update ──────────────────────────────────────────────────────────────────
-
-    [ObservableProperty]
-    private bool _updateAvailable;
-
-    [ObservableProperty]
-    private string _availableVersion = string.Empty;
-
-    [ObservableProperty]
-    private bool _isDownloadingUpdate;
-
-    [ObservableProperty]
-    private int _updateProgress;
-
     private DateTime _lastLoaded = DateTime.MinValue;
 
-    public HomeViewModel(GarminApiService apiService, UserProfileService userProfileService,
-                         UpdateService updateService, WidgetService widgetService,
-                         NotificationService notificationService)
+    public HomeViewModel(
+        GarminApiService    apiService,
+        UserProfileService  userProfileService,
+        WidgetService       widgetService,
+        NotificationService notificationService,
+        WorkerDataService   workerDataService)
     {
         _apiService          = apiService;
         _userProfileService  = userProfileService;
-        _updateService       = updateService;
         _widgetService       = widgetService;
         _notificationService = notificationService;
+        _workerDataService   = workerDataService;
     }
 
     /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
@@ -148,6 +137,13 @@ public partial class HomeViewModel : ObservableObject
 
                 if (_notificationService.EveningCheckEnabled)
                     await _notificationService.ScheduleEveningCheckAsync(TargetKcal, Bmr, ActiveCalories);
+
+                _workerDataService.WriteBalanceData(
+                    balanceKcal:    TargetKcal - Tdee,
+                    tdee:           Tdee,
+                    bmr:            Bmr,
+                    activeCalories: ActiveCalories,
+                    targetKcal:     TargetKcal);
             }
             else
             {
@@ -181,41 +177,14 @@ public partial class HomeViewModel : ObservableObject
     {
         if (!HasData || (DateTime.Now - _lastLoaded).TotalMinutes >= 30)
             await LoadLatestActivity();
-
-        // Non-blocking: check for update in background after data is loaded
-        _ = CheckForUpdateInBackgroundAsync();
     }
 
-    private async Task CheckForUpdateInBackgroundAsync()
-    {
-        var version = await _updateService.CheckForUpdateAsync();
-        if (version is not null)
-        {
-            AvailableVersion = version;
-            UpdateAvailable  = true;
-        }
-    }
-
+    /// <summary>Persists the current CalorieAdjustment slider value to the user profile.</summary>
     [RelayCommand]
-    private async Task DownloadAndRestart()
+    private void SaveDeficitCap()
     {
-        bool confirmed = await Shell.Current.DisplayAlert(
-            "Update installieren",
-            $"Version {AvailableVersion} wird heruntergeladen. Die App startet danach automatisch neu.",
-            "Installieren",
-            "Abbrechen");
-
-        if (!confirmed) return;
-
-        IsDownloadingUpdate = true;
-        try
-        {
-            var progress = new Progress<int>(p => UpdateProgress = p);
-            await _updateService.DownloadAndRestartAsync(progress);
-        }
-        catch
-        {
-            IsDownloadingUpdate = false;
-        }
+        var profile = _userProfileService.Load();
+        profile.CalorieAdjustment = CalorieAdjustment;
+        _userProfileService.Save(profile);
     }
 }

@@ -21,6 +21,7 @@
             <Color x:Key="Hairline">#E2E5EA</Color>
             <Color x:Key="Accent">#A8D86A</Color>
             <Color x:Key="AccentInk">#3F6E1F</Color>
+            <Color x:Key="SurfaceAlt">#EFF1F4</Color>
             <Color x:Key="Danger">#E74C3C</Color>
 
             <x:String x:Key="MonoFont">JetBrainsMono</x:String>
@@ -69,7 +70,7 @@
         </Grid>
 
         <!-- ─────────────────────── Body ────────────────────────── -->
-        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,*">
+        <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,*">
 
             <!-- Add form -->
             <Border Grid.Row="0" Style="{StaticResource Card}"
@@ -123,8 +124,70 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Defizit/Überschuss Chart -->
+            <Border Grid.Row="2" Style="{StaticResource Card}" Margin="16,0,16,12" Padding="8,10">
+                <VerticalStackLayout Spacing="8">
+                    <Label Style="{StaticResource Eyebrow}" Text="Defizit · Überschuss" Margin="4,0" />
+
+                    <!-- Tab switcher: 7T / 4W / 4M -->
+                    <Grid ColumnDefinitions="*,*,*"
+                          BackgroundColor="{StaticResource SurfaceAlt}"
+                          Margin="4,0">
+                        <Button Grid.Column="0" Text="7T"
+                                Command="{Binding SelectTabCommand}" CommandParameter="0"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Muted}"
+                                FontFamily="{StaticResource UiFont}"
+                                FontSize="12" FontAttributes="Bold"
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding IsTab0Active}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
+                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="1" Text="4W"
+                                Command="{Binding SelectTabCommand}" CommandParameter="1"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Muted}"
+                                FontFamily="{StaticResource UiFont}"
+                                FontSize="12" FontAttributes="Bold"
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding IsTab1Active}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
+                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                        <Button Grid.Column="2" Text="4M"
+                                Command="{Binding SelectTabCommand}" CommandParameter="2"
+                                BackgroundColor="Transparent"
+                                TextColor="{StaticResource Muted}"
+                                FontFamily="{StaticResource UiFont}"
+                                FontSize="12" FontAttributes="Bold"
+                                BorderWidth="0" CornerRadius="8" HeightRequest="32" Padding="0">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button"
+                                             Binding="{Binding IsTab2Active}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Ink}" />
+                                    <Setter Property="TextColor"       Value="{StaticResource Bg}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </Grid>
+
+                    <GraphicsView x:Name="BalanceChartView"
+                                  HeightRequest="180"
+                                  Drawable="{Binding BalanceChartDrawable}" />
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Measurements list -->
-            <CollectionView Grid.Row="2"
+            <CollectionView Grid.Row="3"
                             ItemsSource="{Binding Measurements}"
                             Margin="16,0,16,8">
 
@@ -181,7 +244,7 @@
             </CollectionView>
 
             <!-- Loading overlay -->
-            <ActivityIndicator Grid.Row="2"
+            <ActivityIndicator Grid.Row="3"
                                IsRunning="{Binding IsLoading}"
                                IsVisible="{Binding IsLoading}"
                                Color="{StaticResource AccentInk}"

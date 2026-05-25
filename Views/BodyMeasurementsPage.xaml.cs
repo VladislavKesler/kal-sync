@@ -35,6 +35,9 @@ public partial class BodyMeasurementsPage : ContentPage
         if (e.PropertyName == nameof(BodyMeasurementViewModel.Measurements))
             ChartView.Invalidate();
 
+        if (e.PropertyName == nameof(BodyMeasurementViewModel.BalanceChartDrawable))
+            BalanceChartView.Invalidate();
+
         if (e.PropertyName == nameof(BodyMeasurementViewModel.ReminderAlert)
             && vm.ReminderAlert is { } message)
         {

@@ -36,9 +36,6 @@ public partial class SettingsViewModel : ObservableObject
     private string _selectedSex = "Male";
 
     [ObservableProperty]
-    private double _calorieAdjustment;
-
-    [ObservableProperty]
     private string _backendUrl = string.Empty;
 
     // ── Developer options ────────────────────────────────────────────────────
@@ -109,12 +106,11 @@ public partial class SettingsViewModel : ObservableObject
     private void LoadProfile()
     {
         var p               = _profileService.Load();
-        WeightKg            = p.WeightKg;
-        BodyFatPercent      = p.BodyFatPercent;
-        AgeDouble           = p.Age;
-        SelectedSex         = p.Sex == Sex.Female ? "Female" : "Male";
-        CalorieAdjustment   = p.CalorieAdjustment;
-        BackendUrl          = _profileService.GetBackendUrl();
+        WeightKg       = p.WeightKg;
+        BodyFatPercent = p.BodyFatPercent;
+        AgeDouble      = p.Age;
+        SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
+        BackendUrl     = _profileService.GetBackendUrl();
         UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
         WidgetEnabled       = Preferences.Get("widget.enabled", false);
         _profileLoaded      = true;  // Must be set after all properties are loaded
@@ -135,13 +131,14 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task Save()
     {
+        var existing = _profileService.Load();
         _profileService.Save(new UserProfile
         {
-            WeightKg       = WeightKg,
-            BodyFatPercent = BodyFatPercent,
-            Age            = (int)Math.Round(AgeDouble),
-            Sex            = SelectedSex == "Female" ? Sex.Female : Sex.Male,
-            CalorieAdjustment = CalorieAdjustment,
+            WeightKg          = WeightKg,
+            BodyFatPercent    = BodyFatPercent,
+            Age               = (int)Math.Round(AgeDouble),
+            Sex               = SelectedSex == "Female" ? Sex.Female : Sex.Male,
+            CalorieAdjustment = existing.CalorieAdjustment,
         });
 
         _notificationService.ReminderEnabled      = MeasurementReminderEnabled;

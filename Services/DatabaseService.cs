@@ -16,6 +16,7 @@ public class DatabaseService
             await _db.CreateTableAsync<BodyMeasurement>();
             await _db.CreateTableAsync<TennisSession>();
             await _db.CreateTableAsync<RunSession>();
+            await _db.CreateTableAsync<DailyBalance>();
         }
         return _db;
     }
@@ -90,5 +91,58 @@ public class DatabaseService
     {
         var db = await GetConnectionAsync();
         await db.DeleteAsync(session);
+    }
+
+    // ── Daily balance ─────────────────────────────────────────────────────────
+
+    public async Task UpsertDailyBalanceAsync(DailyBalance entry)
+    {
+        var db = await GetConnectionAsync();
+        var dateOnly = entry.Date.Date;
+        var existing = await db.Table<DailyBalance>()
+                                .Where(e => e.Date == dateOnly)
+                                .FirstOrDefaultAsync();
+        if (existing is null)
+        {
+            await db.InsertAsync(entry);
+        }
+        else
+        {
+            entry.Id = existing.Id;
+            await db.UpdateAsync(entry);
+        }
+    }
+
+    public async Task<List<DailyBalance>> GetDailyBalancesAsync(DateTime from, DateTime to)
+    {
+        var db = await GetConnectionAsync();
+        return await db.Table<DailyBalance>()
+                       .Where(e => e.Date >= from && e.Date <= to)
+                       .OrderBy(e => e.Date)
+                       .ToListAsync();
+    }
+
+    public Task<List<DailyBalance>> GetLastNDaysAsync(int days)
+        => GetDailyBalancesAsync(DateTime.Today.AddDays(-(days - 1)), DateTime.Today);
+
+    /// <summary>Synchronous upsert used by DailyBalanceWorker (no async in DoWork).</summary>
+    public void UpsertDailyBalanceSync(DailyBalance entry)
+    {
+        var path = Path.Combine(FileSystem.AppDataDirectory, "measurements.db3");
+        using var db = new SQLite.SQLiteConnection(path);
+        db.CreateTable<DailyBalance>();
+        var dateOnly = entry.Date.Date;
+        var existing = db.Table<DailyBalance>()
+                         .Where(e => e.Date == dateOnly)
+                         .FirstOrDefault();
+        if (existing is null)
+        {
+            db.Insert(entry);
+        }
+        else
+        {
+            entry.Id = existing.Id;
+            db.Update(entry);
+        }
     }
 }

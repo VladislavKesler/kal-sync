@@ -101,53 +101,6 @@
             <ScrollView IsVisible="{Binding HasData}" Padding="16,8,16,20">
                 <VerticalStackLayout Spacing="16">
 
-                    <!-- ── Update banner (visible only when update is available) ── -->
-                    <Border IsVisible="{Binding UpdateAvailable}"
-                            Background="{StaticResource Accent}"
-                            Stroke="{StaticResource AccentInk}" StrokeThickness="1"
-                            Padding="16,12">
-                        <Border.StrokeShape><RoundRectangle CornerRadius="16" /></Border.StrokeShape>
-                        <Grid ColumnDefinitions="*,Auto">
-
-                            <!-- Text -->
-                            <VerticalStackLayout Grid.Column="0" Spacing="2" VerticalOptions="Center">
-                                <Label Style="{StaticResource Eyebrow}"
-                                       Text="Update verfügbar"
-                                       TextColor="{StaticResource AccentInk}" />
-                                <Label FontFamily="{StaticResource UiFont}" FontSize="13"
-                                       FontAttributes="Bold" TextColor="{StaticResource AccentInk}"
-                                       Text="{Binding AvailableVersion, StringFormat='Version {0} ist bereit'}" />
-                            </VerticalStackLayout>
-
-                            <!-- Install button -->
-                            <Button Grid.Column="1"
-                                    IsVisible="{Binding IsDownloadingUpdate,
-                                                Converter={StaticResource Invert}}"
-                                    Text="Installieren"
-                                    Command="{Binding DownloadAndRestartCommand}"
-                                    BackgroundColor="{StaticResource AccentInk}"
-                                    TextColor="{StaticResource Bg}"
-                                    FontFamily="{StaticResource UiFont}"
-                                    FontAttributes="Bold" FontSize="12"
-                                    CornerRadius="10" Padding="14,8" />
-
-                            <!-- Progress indicator -->
-                            <VerticalStackLayout Grid.Column="1"
-                                                 IsVisible="{Binding IsDownloadingUpdate}"
-                                                 VerticalOptions="Center" Spacing="2">
-                                <ActivityIndicator IsRunning="{Binding IsDownloadingUpdate}"
-                                                   Color="{StaticResource AccentInk}"
-                                                   HeightRequest="24" WidthRequest="24"
-                                                   HorizontalOptions="Center" />
-                                <Label FontFamily="{StaticResource MonoFont}" FontSize="10"
-                                       TextColor="{StaticResource AccentInk}"
-                                       HorizontalOptions="Center"
-                                       Text="{Binding UpdateProgress, StringFormat='{0} %'}" />
-                            </VerticalStackLayout>
-
-                        </Grid>
-                    </Border>
-
                     <!-- ── Hero card with target ring ───────────── -->
                     <Border Style="{StaticResource Card}" Padding="16,24,16,18">
                         <Border.StrokeShape><RoundRectangle CornerRadius="20" /></Border.StrokeShape>
@@ -250,6 +203,16 @@
                                 <Label Grid.Column="2" Style="{StaticResource Eyebrow}" Text="+500 kcal"
                                        HorizontalOptions="End" />
                             </Grid>
+                            <Button Text="Speichern"
+                                    Command="{Binding SaveDeficitCapCommand}"
+                                    BackgroundColor="{StaticResource Ink}"
+                                    TextColor="{StaticResource Bg}"
+                                    FontFamily="{StaticResource UiFont}"
+                                    FontAttributes="Bold"
+                                    FontSize="13"
+                                    CornerRadius="10"
+                                    HeightRequest="40"
+                                    Margin="0,4,0,0" />
                         </VerticalStackLayout>
                     </Border>
 

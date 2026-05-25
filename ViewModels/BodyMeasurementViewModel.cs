@@ -15,16 +15,29 @@ public partial class BodyMeasurementViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<BodyMeasurement> _measurements = [];
     [ObservableProperty] private double _newWeightKg = 80.0;
     [ObservableProperty] private double _newBodyFatPercent = 20.0;
-    [ObservableProperty] private bool _isFormVisible;
-    [ObservableProperty] private bool _isLoading;
-    [ObservableProperty] private bool _hasData;
+    [ObservableProperty] private bool   _isFormVisible;
+    [ObservableProperty] private bool   _isLoading;
+    [ObservableProperty] private bool   _hasData;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTab0Active))]
+    [NotifyPropertyChangedFor(nameof(IsTab1Active))]
+    [NotifyPropertyChangedFor(nameof(IsTab2Active))]
+    private int _selectedTabIndex;
+
+    public bool IsTab0Active => _selectedTabIndex == 0;
+    public bool IsTab1Active => _selectedTabIndex == 1;
+    public bool IsTab2Active => _selectedTabIndex == 2;
 
     /// <summary>Set by LoadAsync when the measurement reminder interval has elapsed.
     /// Code-behind watches this and shows a DisplayAlert, then resets it to null.</summary>
     [ObservableProperty] private string? _reminderAlert;
 
-    /// <summary>Drawable for the measurement chart; updated after each load.</summary>
+    /// <summary>Drawable for the weight/KFA chart; updated after each load.</summary>
     public MeasurementChartDrawable ChartDrawable { get; } = new();
+
+    /// <summary>Drawable for the daily deficit/surplus bar chart; updated after each LoadBalanceChartAsync.</summary>
+    public DailyBalanceChartDrawable BalanceChartDrawable { get; } = new();
 
     public BodyMeasurementViewModel(
         DatabaseService     db,
@@ -55,6 +68,8 @@ public partial class BodyMeasurementViewModel : ObservableObject
         if (_notificationService.IsDue(latest?.Date))
             ReminderAlert = "Zeit für deine nächste KFA-Messung!\nStelle dich auf die Waage und trage Gewicht & Körperfett ein.";
 
+        await LoadBalanceChartAsync();
+
         IsLoading = false;
     }
 
@@ -82,4 +97,26 @@ public partial class BodyMeasurementViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleForm() => IsFormVisible = !IsFormVisible;
+
+    [RelayCommand]
+    private async Task SelectTab(int index)
+    {
+        SelectedTabIndex = index;
+        await LoadBalanceChartAsync();
+    }
+
+    private async Task LoadBalanceChartAsync()
+    {
+        var entries = _selectedTabIndex switch
+        {
+            0 => await _db.GetLastNDaysAsync(7),
+            1 => await _db.GetLastNDaysAsync(28),
+            2 => await _db.GetLastNDaysAsync(120),
+            _ => [],
+        };
+
+        BalanceChartDrawable.Entries = entries;
+        BalanceChartDrawable.Mode    = (ChartMode)_selectedTabIndex;
+        OnPropertyChanged(nameof(BalanceChartDrawable));
+    }
 }

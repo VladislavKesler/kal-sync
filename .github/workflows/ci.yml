@@ -13,7 +13,7 @@ jobs:
   # ─────────────────────────────────────────────────────────────────────────
   csharp-tests:
     name: C# — Build & Test
-    runs-on: windows-latest   # MAUI Windows target requires Windows runner
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -24,18 +24,13 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Install MAUI workload
-        run: dotnet workload install maui
+        run: dotnet workload install maui-android
 
-      # Build MAUI app for Windows only.
-      # On a Windows runner the project would also try to compile for
-      # net9.0-android / net9.0-ios / net9.0-maccatalyst — those targets
-      # require SDKs that are not available on a Windows CI runner.
-      # Scoping to the Windows TFM gives us a fast compilation smoke-test
-      # without cross-platform SDK dependencies.
-      - name: Build MAUI app (Windows target, compilation smoke-test)
+      # Build MAUI app for Android (compilation smoke-test).
+      - name: Build MAUI app (Android target, compilation smoke-test)
         run: >
           dotnet build kal-sync.csproj
-          --framework net9.0-windows10.0.19041.0
+          --framework net9.0-android
           --configuration Release
 
       # The test project is a plain net9.0 class library — it does NOT
