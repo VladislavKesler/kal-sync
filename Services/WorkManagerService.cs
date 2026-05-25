@@ -22,16 +22,18 @@ public class WorkManagerService
         long delayMs = (long)(target - now).TotalMilliseconds;
 
         var workerClass = Java.Lang.Class.FromType(typeof(DailyBalanceWorker))!;
-        var request = (PeriodicWorkRequest)new PeriodicWorkRequest.Builder(
-                workerClass, 24L, TimeUnit.Hours!, 10L, TimeUnit.Minutes!)
-            .SetInitialDelay(delayMs, TimeUnit.Milliseconds!)
-            .Build();
+
+        // Break the chain to avoid CS8602 on nullable builder return types
+        var builder = new PeriodicWorkRequest.Builder(
+            workerClass, 24L, TimeUnit.Hours!, 10L, TimeUnit.Minutes!);
+        builder.SetInitialDelay(delayMs, TimeUnit.Milliseconds!);
+        var request = (PeriodicWorkRequest)builder.Build()!;
 
         WorkManager
             .GetInstance(Android.App.Application.Context)
             .EnqueueUniquePeriodicWork(
                 "kal_sync_daily_balance",
-                ExistingPeriodicWorkPolicy.Keep,
+                ExistingPeriodicWorkPolicy.Keep!,
                 request);
     }
 }

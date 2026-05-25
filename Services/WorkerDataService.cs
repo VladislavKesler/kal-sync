@@ -7,6 +7,8 @@ public class WorkerDataService
 {
     private const string PrefsName = "kal_sync_worker";
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public void WriteBalanceData(
         double balanceKcal,
         double tdee,
