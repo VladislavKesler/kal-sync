@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using AndroidX.Work;
 using Java.Util.Concurrent;
 
@@ -9,6 +10,8 @@ namespace kal_sync.Services;
 /// </summary>
 public class WorkManagerService
 {
+    [SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public void ScheduleDailyBalanceWorker()
     {
         var now    = DateTime.Now;
@@ -18,8 +21,8 @@ public class WorkManagerService
 
         long delayMs = (long)(target - now).TotalMilliseconds;
 
-        var workerClass = Java.Lang.Class.FromType(typeof(DailyBalanceWorker));
-        var request = new PeriodicWorkRequest.Builder(
+        var workerClass = Java.Lang.Class.FromType(typeof(DailyBalanceWorker))!;
+        var request = (PeriodicWorkRequest)new PeriodicWorkRequest.Builder(
                 workerClass, 24L, TimeUnit.Hours!, 10L, TimeUnit.Minutes!)
             .SetInitialDelay(delayMs, TimeUnit.Milliseconds!)
             .Build();

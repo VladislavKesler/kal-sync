@@ -126,6 +126,8 @@ public class DatabaseService
         => GetDailyBalancesAsync(DateTime.Today.AddDays(-(days - 1)), DateTime.Today);
 
     /// <summary>Synchronous upsert used by DailyBalanceWorker (no async in DoWork).</summary>
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
+        Justification = "Instance method for DI / testability")]
     public void UpsertDailyBalanceSync(DailyBalance entry)
     {
         var path = Path.Combine(FileSystem.AppDataDirectory, "measurements.db3");

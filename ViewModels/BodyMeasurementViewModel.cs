@@ -25,9 +25,9 @@ public partial class BodyMeasurementViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsTab2Active))]
     private int _selectedTabIndex;
 
-    public bool IsTab0Active => _selectedTabIndex == 0;
-    public bool IsTab1Active => _selectedTabIndex == 1;
-    public bool IsTab2Active => _selectedTabIndex == 2;
+    public bool IsTab0Active => SelectedTabIndex == 0;
+    public bool IsTab1Active => SelectedTabIndex == 1;
+    public bool IsTab2Active => SelectedTabIndex == 2;
 
     /// <summary>Set by LoadAsync when the measurement reminder interval has elapsed.
     /// Code-behind watches this and shows a DisplayAlert, then resets it to null.</summary>
@@ -107,7 +107,7 @@ public partial class BodyMeasurementViewModel : ObservableObject
 
     private async Task LoadBalanceChartAsync()
     {
-        var entries = _selectedTabIndex switch
+        var entries = SelectedTabIndex switch
         {
             0 => await _db.GetLastNDaysAsync(7),
             1 => await _db.GetLastNDaysAsync(28),
@@ -116,7 +116,7 @@ public partial class BodyMeasurementViewModel : ObservableObject
         };
 
         BalanceChartDrawable.Entries = entries;
-        BalanceChartDrawable.Mode    = (ChartMode)_selectedTabIndex;
+        BalanceChartDrawable.Mode    = (ChartMode)SelectedTabIndex;
         OnPropertyChanged(nameof(BalanceChartDrawable));
     }
 }

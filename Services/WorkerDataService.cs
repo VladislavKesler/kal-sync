@@ -1,4 +1,3 @@
-using Android.App;
 using Android.Content;
 
 namespace kal_sync.Services;
@@ -15,7 +14,8 @@ public class WorkerDataService
         double activeCalories,
         double targetKcal)
     {
-        var prefs = Application.Context.GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
+        var prefs = Android.App.Application.Context
+            .GetSharedPreferences(PrefsName, FileCreationMode.Private)!;
         var editor = prefs.Edit()!;
         editor.PutFloat("worker.last_balance_kcal",    (float)balanceKcal);
         editor.PutFloat("worker.last_tdee",            (float)tdee);
