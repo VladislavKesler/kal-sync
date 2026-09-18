@@ -20,15 +20,6 @@ class GarminService:
             logger.info("Garmin login successful")
         return self._client
 
-    async def get_user_stats(self) -> dict[str, Any]:
-        """Fetch today's stats: resting HR and active calories from Garmin."""
-        client = self._ensure_logged_in()
-        stats = client.get_stats(date.today().isoformat())
-        return {
-            "resting_hr": int(stats.get("restingHeartRate") or 60),
-            "active_calories": int(stats.get("activeKilocalories") or 0),
-        }
-
     async def get_latest_activity(self) -> dict[str, Any]:
         client = self._ensure_logged_in()
 

@@ -11,14 +11,10 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from calorie_calculator import calculate_calories_keytel
 from main import app  # noqa: F401  (re-exported for tests)
 
 # ── Fixtures ─────────────────────────────────────────────────────────────────
-
-_STATS_PAYLOAD: dict[str, Any] = {
-    "resting_hr": 55,
-    "active_calories": 450,
-}
 
 
 @pytest.fixture
@@ -39,6 +35,12 @@ def mock_activity() -> dict[str, Any]:
             "zone5_minutes": 1,
         },
     }
+
+
+@pytest.fixture
+def mock_strength_activity(mock_activity: dict[str, Any]) -> dict[str, Any]:
+    """Same as mock_activity but flagged as strength training."""
+    return {**mock_activity, "activity_type": "strength_training"}
 
 
 # ── Health endpoint ───────────────────────────────────────────────────────────
@@ -66,17 +68,10 @@ async def test_health_endpoint_returns_ok_status() -> None:
 
 
 async def test_latest_activity_returns_200(mock_activity: dict[str, Any]) -> None:
-    with (
-        patch(
-            "main.garmin_service.get_user_stats",
-            new_callable=AsyncMock,
-            return_value=_STATS_PAYLOAD,
-        ),
-        patch(
-            "main.garmin_service.get_latest_activity",
-            new_callable=AsyncMock,
-            return_value=mock_activity,
-        ),
+    with patch(
+        "main.garmin_service.get_latest_activity",
+        new_callable=AsyncMock,
+        return_value=mock_activity,
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
@@ -86,29 +81,52 @@ async def test_latest_activity_returns_200(mock_activity: dict[str, Any]) -> Non
     assert response.status_code == 200
 
 
-async def test_latest_activity_uses_garmin_active_calories(
+async def test_latest_activity_calls_keytel_formula(
     mock_activity: dict[str, Any],
 ) -> None:
-    """calculated_calories in the response must equal today's Garmin active calories."""
+    """calculated_calories must come from calculate_calories_keytel(), not from
+    Garmin's daily active-calorie total. Regression guard against silently
+    falling back to the old Garmin passthrough.
+    """
     with (
-        patch(
-            "main.garmin_service.get_user_stats",
-            new_callable=AsyncMock,
-            return_value=_STATS_PAYLOAD,
-        ),
         patch(
             "main.garmin_service.get_latest_activity",
             new_callable=AsyncMock,
             return_value=mock_activity,
         ),
+        patch(
+            "main.calculate_calories_keytel",
+            wraps=calculate_calories_keytel,
+        ) as keytel_spy,
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
         ) as client:
-            response = await client.get("/api/activities/latest")
+            response = await client.get(
+                "/api/activities/latest",
+                params={"weight_kg": 91.0, "age": 35, "sex_male": True},
+            )
 
     assert response.status_code == 200
-    assert response.json()["calculated_calories"] == pytest.approx(450.0)
+    keytel_spy.assert_called_once_with(
+        avg_hr=mock_activity["avg_hr"],
+        weight_kg=91.0,
+        age=35,
+        sex_male=True,
+        duration_minutes=mock_activity["duration_minutes"],
+    )
+
+    expected = calculate_calories_keytel(
+        avg_hr=mock_activity["avg_hr"],
+        weight_kg=91.0,
+        age=35,
+        sex_male=True,
+        duration_minutes=mock_activity["duration_minutes"],
+    )
+    body = response.json()
+    assert body["calculated_calories"] == pytest.approx(expected)
+    # Must not silently equal a Garmin daily-total-shaped value anymore.
+    assert body["calculated_calories"] != pytest.approx(450.0)
 
 
 async def test_latest_activity_response_shape(
@@ -124,19 +142,14 @@ async def test_latest_activity_response_shape(
         "calculated_calories",
         "difference",
         "zones",
+        "confidence",
+        "confidence_note",
     }
 
-    with (
-        patch(
-            "main.garmin_service.get_user_stats",
-            new_callable=AsyncMock,
-            return_value=_STATS_PAYLOAD,
-        ),
-        patch(
-            "main.garmin_service.get_latest_activity",
-            new_callable=AsyncMock,
-            return_value=mock_activity,
-        ),
+    with patch(
+        "main.garmin_service.get_latest_activity",
+        new_callable=AsyncMock,
+        return_value=mock_activity,
     ):
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
@@ -145,3 +158,42 @@ async def test_latest_activity_response_shape(
 
     assert response.status_code == 200
     assert required_fields.issubset(response.json().keys())
+
+
+# ── Confidence flag ────────────────────────────────────────────────────────────
+
+
+async def test_strength_training_gets_low_confidence(
+    mock_strength_activity: dict[str, Any],
+) -> None:
+    with patch(
+        "main.garmin_service.get_latest_activity",
+        new_callable=AsyncMock,
+        return_value=mock_strength_activity,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.get("/api/activities/latest")
+
+    body = response.json()
+    assert body["confidence"] == "low"
+    assert body["confidence_note"]
+
+
+async def test_cardio_activity_gets_medium_confidence(
+    mock_activity: dict[str, Any],
+) -> None:
+    with patch(
+        "main.garmin_service.get_latest_activity",
+        new_callable=AsyncMock,
+        return_value=mock_activity,
+    ):
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            response = await client.get("/api/activities/latest")
+
+    body = response.json()
+    assert body["confidence"] == "medium"
+    assert body["confidence_note"] is None
