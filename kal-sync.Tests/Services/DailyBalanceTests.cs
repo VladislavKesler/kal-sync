@@ -86,7 +86,7 @@ public class DailyBalanceTests
 
         var slots = BuildSevenDaysSlots(entries);
 
-        slots.Should().OnlyContain(s => s.Value is null);
+        slots.Should().OnlyContain(s => s.value == null);
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public class DailyBalanceTests
 
         var slots = BuildFourWeeksSlots(entries);
 
-        slots.Should().OnlyContain(s => s.Value is null);
+        slots.Should().OnlyContain(s => s.value == null);
     }
 
     // ── Helpers (mirror logic from GaintainingService and DailyBalanceChartDrawable) ──
@@ -104,11 +104,11 @@ public class DailyBalanceTests
     private static double CalculateTargetKcal(double tdee, double adjustment, double bmr)
         => Math.Max(tdee + adjustment, bmr);
 
-    private static (double? Value, string Label)[] BuildSevenDaysSlots(
+    private static (double? value, string label)[] BuildSevenDaysSlots(
         IEnumerable<TestDailyBalance> entries)
     {
         var map   = entries.ToDictionary(e => e.Date.Date);
-        var slots = new (double? Value, string Label)[7];
+        var slots = new (double? value, string label)[7];
 
         for (int i = 0; i < 7; i++)
         {
@@ -117,14 +117,15 @@ public class DailyBalanceTests
                 ? (entry.BalanceKcal, date.DayOfWeek.ToString()[..2])
                 : (null, date.DayOfWeek.ToString()[..2]);
         }
+
         return slots;
     }
 
-    private static (double? Value, string Label)[] BuildFourWeeksSlots(
+    private static (double? value, string label)[] BuildFourWeeksSlots(
         IEnumerable<TestDailyBalance> entries)
     {
         var map   = entries.ToDictionary(e => e.Date.Date);
-        var slots = new (double? Value, string Label)[4];
+        var slots = new (double? value, string label)[4];
 
         for (int w = 0; w < 4; w++)
         {
@@ -142,17 +143,7 @@ public class DailyBalanceTests
                 ? (weekValues.Average(), $"KW{w}")
                 : (null, $"KW{w}");
         }
+
         return slots;
     }
-}
-
-// Minimal mirror of DailyBalance for tests (no SQLite dependency)
-internal sealed class TestDailyBalance
-{
-    public DateTime Date           { get; set; }
-    public double   BalanceKcal    { get; set; }
-    public double   Tdee           { get; set; }
-    public double   Bmr            { get; set; }
-    public double   ActiveCalories { get; set; }
-    public double   TargetKcal     { get; set; }
 }

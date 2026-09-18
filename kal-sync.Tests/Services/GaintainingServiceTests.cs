@@ -71,6 +71,35 @@ public class GaintainingServiceTests
         target.Should().BeApproximately(bmr, precision: 0.01);
     }
 
+    // --- Recommended adjustment (CalculateRecommendedAdjustment) ---
+
+    [Fact]
+    public void RecommendedAdjustment_ShouldBeMaxDeficit_ForLowActivity()
+    {
+        double recommended = CalculateRecommendedAdjustment(activeCalories: 300.0);
+
+        recommended.Should().Be(MaxDeficitKcal);
+        recommended.Should().Be(-500.0);
+    }
+
+    [Fact]
+    public void RecommendedAdjustment_ShouldBeMaxDeficit_AtActivityThreshold()
+    {
+        // At exactly the threshold (not above it), no buffer is added yet.
+        double recommended = CalculateRecommendedAdjustment(activeCalories: HighActivityThresholdKcal);
+
+        recommended.Should().Be(MaxDeficitKcal);
+    }
+
+    [Fact]
+    public void RecommendedAdjustment_ShouldAddBuffer_ForHighActivity()
+    {
+        double recommended = CalculateRecommendedAdjustment(activeCalories: 800.0);
+
+        recommended.Should().Be(MaxDeficitKcal + MaxBufferKcal);
+        recommended.Should().Be(-400.0);
+    }
+
     // --- Traffic light (boundary value tests) ---
 
     [Theory]
@@ -118,11 +147,20 @@ public class GaintainingServiceTests
 
     // --- Helpers (mirror GaintainingService implementation) ---
 
+    private const double MaxDeficitKcal = -500.0;
+    private const double HighActivityThresholdKcal = 600.0;
+    private const double MaxBufferKcal = 100.0;
+
     private static double CalculateTdee(double bmr, double activeCalories)
         => bmr + activeCalories;
 
     private static double CalculateTargetKcal(double tdee, double calorieAdjustment, double bmr)
         => Math.Max(tdee + calorieAdjustment, bmr);
+
+    private static double CalculateRecommendedAdjustment(double activeCalories)
+        => activeCalories > HighActivityThresholdKcal
+            ? MaxDeficitKcal + MaxBufferKcal
+            : MaxDeficitKcal;
 
     private static double CalculateMonthlyGainRate(
         double currentAvg, double previousAvg, double bodyWeight)

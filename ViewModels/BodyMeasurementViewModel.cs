@@ -16,6 +16,13 @@ public partial class BodyMeasurementViewModel : ObservableObject
     [ObservableProperty] private ObservableCollection<BodyMeasurement> _measurements = [];
     [ObservableProperty] private double _newWeightKg = 80.0;
     [ObservableProperty] private double _newBodyFatPercent = 20.0;
+
+    /// <summary>Optional. 0 means "nicht erfasst" and is stored as null.</summary>
+    [ObservableProperty] private double _newWaistCm;
+
+    /// <summary>Optional. 0 means "nicht erfasst" and is stored as null.</summary>
+    [ObservableProperty] private double _newNeckCm;
+
     [ObservableProperty] private bool   _isFormVisible;
     [ObservableProperty] private bool   _isLoading;
     [ObservableProperty] private bool   _hasData;
@@ -99,8 +106,12 @@ public partial class BodyMeasurementViewModel : ObservableObject
             Date           = DateTime.Today,
             WeightKg       = NewWeightKg,
             BodyFatPercent = NewBodyFatPercent,
+            WaistCm        = NewWaistCm > 0 ? NewWaistCm : null,
+            NeckCm         = NewNeckCm > 0 ? NewNeckCm : null,
         });
         IsFormVisible = false;
+        NewWaistCm = 0;
+        NewNeckCm  = 0;
         await LoadAsync();
     }
 

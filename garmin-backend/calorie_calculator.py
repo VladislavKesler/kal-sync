@@ -34,6 +34,15 @@ def calculate_calories(
     bmr_kcal: float,
     activity_factor: float,
 ) -> float:
+    """%HRR-based heuristic (%HRR × BMR/1440 × activity_factor).
+
+    NOT used in the production path — main.py calls
+    calculate_calories_keytel() instead. Kept here only as a documented
+    reference/alternative implementation: the per-activity-type factors in
+    _ACTIVITY_FACTORS (1.2-1.8) are hand-picked estimates without a
+    validated source, so this formula has not been trusted for the actual
+    calorie target.
+    """
     hrr = calculate_hrr(max_hr, resting_hr)
     intensity = calculate_intensity(avg_hr, resting_hr, hrr)
     kcal_per_min = intensity * (bmr_kcal / 1440) * activity_factor

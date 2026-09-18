@@ -32,6 +32,13 @@ public class ActivityResponse
 
     [JsonPropertyName("zones")]
     public ZoneData? Zones { get; set; } // Nullable!
+
+    /// <summary>"low" for strength training (HR-based formulas don't map well to it), else "medium".</summary>
+    [JsonPropertyName("confidence")]
+    public string Confidence { get; set; } = "medium";
+
+    [JsonPropertyName("confidence_note")]
+    public string? ConfidenceNote { get; set; }
 }
 
 public class ZoneData

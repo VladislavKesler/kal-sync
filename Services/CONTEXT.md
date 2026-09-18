@@ -9,9 +9,10 @@ Services werden als Singletons per DI in `MauiProgram.cs` registriert.
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `GarminApiService.cs` | HTTP-Client für das Python-Backend (`/api/activities/latest`, `/api/health`) |
-| `UserProfileService.cs` | Lädt/speichert Benutzerprofil (Gewicht, Größe, Alter, Geschlecht) lokal; berechnet BMR via Mifflin-St-Jeor |
-| `GaintainingService.cs` | Reine Berechnungs-Logik: TDEE, Tagesziel (Surplus/Defizit) |
+| `GarminApiService.cs` | HTTP-Client für das Python-Backend (`/api/activities/latest`, `/api/health`); sendet Gewicht/Alter/Geschlecht als Query-Parameter, da das Backend zustandslos ist |
+| `UserProfileService.cs` | Lädt/speichert Benutzerprofil (Gewicht, Körperfett-%, Alter, Geschlecht) lokal; berechnet BMR via Katch-McArdle (`370 + 21.6 × LBM`) |
+| `GaintainingService.cs` | Reine Berechnungs-Logik: TDEE, Tagesziel (Surplus/Defizit), automatische Defizit-Empfehlung (`CalculateRecommendedAdjustment`) |
+| `CalibrationService.cs` | Selbst-Kalibrierung: vergleicht vorhergesagte Kalorienbilanz (`DailyBalance`-Historie) mit gemessenem Gewichtstrend (`BodyMeasurement`-Historie) und leitet einen linearen Korrekturfaktor für die Keytel-Schätzung ab |
 
 ## Prozess
 

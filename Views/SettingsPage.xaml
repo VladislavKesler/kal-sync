@@ -255,6 +255,18 @@
                     </VerticalStackLayout>
                 </Border>
 
+                <!-- Calibration section -->
+                <Label Style="{StaticResource Eyebrow}" Text="Kalibrierung" Margin="4,0,0,0" />
+                <Border Style="{StaticResource Card}" Padding="16,14">
+                    <VerticalStackLayout Spacing="4">
+                        <Label FontSize="14" TextColor="{StaticResource Ink}"
+                               Text="Korrekturfaktor (Aktivitäts-Kalorien)" />
+                        <Label FontFamily="{StaticResource MonoFont}" FontSize="13"
+                               TextColor="{StaticResource Muted}"
+                               Text="{Binding CorrectionFactorLabel}" />
+                    </VerticalStackLayout>
+                </Border>
+
                 <!-- Save button -->
                 <Button Text="Speichern"
                         Command="{Binding SaveCommand}"

@@ -11,7 +11,7 @@ Läuft lokal auf Port 8000 — wird vom MAUI-Frontend konsumiert.
 |-------|--------------|
 | `main.py` | FastAPI-App, Routen: `GET /api/health`, `GET /api/activities/latest` |
 | `garmin_service.py` | `GarminService`-Klasse: Login + Daten von garminconnect-Library |
-| `calorie_calculator.py` | Reine Berechnungs-Funktionen (BMR, Kalorien) ohne externe Abhängigkeiten |
+| `calorie_calculator.py` | `calculate_calories_keytel()` ist der aktive Berechnungspfad, aufgerufen aus `main.py` für `calculated_calories` (ersetzt den früheren Garmin-Rohwert-Passthrough). `calculate_calories()` (HRR-Heuristik) bleibt als dokumentierte, aktuell unbenutzte Referenzalternative — ihre `_ACTIVITY_FACTORS`-Konstanten haben keine validierte Quelle |
 | `models.py` | Pydantic-Modelle: `ActivityResponse`, `ZoneData` |
 | `.env` | Garmin-Credentials (nicht committen!) |
 | `.env.example` | Template für neue Entwickler |
@@ -20,7 +20,7 @@ Läuft lokal auf Port 8000 — wird vom MAUI-Frontend konsumiert.
 
 1. `.env` mit `GARMIN_EMAIL` und `GARMIN_PASSWORD` befüllen
 2. `uvicorn main:app --reload --port 8000` starten
-3. `GET /api/activities/latest` gibt `ActivityResponse` JSON zurück
+3. `GET /api/activities/latest?weight_kg=&age=&sex_male=` gibt `ActivityResponse` JSON zurück (Query-Parameter kommen vom MAUI-Client, der das Profil kennt; ohne sie greifen `DEFAULT_WEIGHT_KG`/`DEFAULT_AGE`/`DEFAULT_SEX_MALE` in `main.py` als Fallback für manuelle Aufrufe)
 4. `GarminService` logged sich lazy ein (beim ersten Request)
 
 ## Standards

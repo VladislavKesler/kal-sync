@@ -18,3 +18,5 @@ class ActivityResponse(BaseModel):
     calculated_calories: float = Field(ge=0)
     difference: float
     zones: ZoneData
+    confidence: str = Field(default="medium")
+    confidence_note: str | None = Field(default=None)

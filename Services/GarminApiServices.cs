@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text.Json;
 using System.Threading.Tasks;
 using kal_sync.Models;
@@ -40,12 +41,18 @@ public class GarminApiService : IDisposable
     }
 
     /// <summary>
-    /// Fetch today's calorie data from the backend.
-    /// Returns BMR-independent active calories from Garmin's daily tracking.
+    /// Fetch the latest activity from the backend, with its calories estimated via
+    /// the Keytel formula. The backend is stateless, so the body profile it needs
+    /// (weight/age/sex) is sent along as query parameters.
     /// </summary>
     public async Task<ActivityResponse?> GetLatestActivityAsync()
     {
-        var url = $"{_userProfileService.GetBackendUrl()}/api/activities/latest";
+        var profile = _userProfileService.Load();
+        var sexMale = profile.Sex == Sex.Male;
+        var url = $"{_userProfileService.GetBackendUrl()}/api/activities/latest" +
+                  $"?weight_kg={profile.WeightKg.ToString(CultureInfo.InvariantCulture)}" +
+                  $"&age={profile.Age.ToString(CultureInfo.InvariantCulture)}" +
+                  $"&sex_male={(sexMale ? "true" : "false")}";
 
         Debug.WriteLine($"[GarminApiService] Calling {url}");
 
