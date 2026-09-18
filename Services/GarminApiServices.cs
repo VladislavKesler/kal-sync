@@ -41,18 +41,19 @@ public class GarminApiService : IDisposable
     }
 
     /// <summary>
-    /// Fetch the latest activity from the backend, with its calories estimated via
-    /// the Keytel formula. The backend is stateless, so the body profile it needs
-    /// (weight/age/sex) is sent along as query parameters.
+    /// Fetch every activity of <paramref name="day"/> with sport-specific net-kcal
+    /// estimates plus NEAT from steps. Body profile and the Cardio-profile mapping
+    /// travel as query parameters because the backend is stateless.
     /// </summary>
-    public async Task<ActivityResponse?> GetLatestActivityAsync()
+    public async Task<DaySummaryResponse?> GetDaySummaryAsync(DateTime day)
     {
         var profile = _userProfileService.Load();
         var sexMale = profile.Sex == Sex.Male;
-        var url = $"{_userProfileService.GetBackendUrl()}/api/activities/latest" +
+        var url = $"{_userProfileService.GetBackendUrl()}/api/day/{day:yyyy-MM-dd}" +
                   $"?weight_kg={profile.WeightKg.ToString(CultureInfo.InvariantCulture)}" +
                   $"&age={profile.Age.ToString(CultureInfo.InvariantCulture)}" +
-                  $"&sex_male={(sexMale ? "true" : "false")}";
+                  $"&sex_male={(sexMale ? "true" : "false")}" +
+                  $"&cardio_sport={ToQueryValue(profile.CardioSport)}";
 
         Debug.WriteLine($"[GarminApiService] Calling {url}");
 
@@ -79,7 +80,7 @@ public class GarminApiService : IDisposable
 
         try
         {
-            return JsonSerializer.Deserialize<ActivityResponse>(content, JsonOptions);
+            return JsonSerializer.Deserialize<DaySummaryResponse>(content, JsonOptions);
         }
         catch (JsonException ex)
         {
@@ -88,6 +89,14 @@ public class GarminApiService : IDisposable
                 $"Invalid response format: {ex.Message}", ex);
         }
     }
+
+    /// <summary>Maps the enum to the backend's CardioSport query values.</summary>
+    public static string ToQueryValue(CardioSport sport) => sport switch
+    {
+        CardioSport.TennisSingles => "tennis_singles",
+        CardioSport.TennisDoubles => "tennis_doubles",
+        _                         => "generic",
+    };
 
     /// <summary>Returns <c>true</c> when the backend health endpoint responds 200.</summary>
     public async Task<bool> HealthCheckAsync()

@@ -16,6 +16,7 @@ public class UserProfileService
     private const string AgeKey = "profile.age";
     private const string SexKey = "profile.sex";
     private const string CalorieAdjustmentKey = "profile.calorie_adjustment";
+    private const string CardioSportKey = "profile.cardio_sport";
     private const string BackendUrlKey = "profile.backend_url";
 
     // ── Persistence ─────────────────────────────────────────────────────────
@@ -31,6 +32,7 @@ public class UserProfileService
         Age            = Preferences.Get(AgeKey, 30),
         Sex            = (Sex)Preferences.Get(SexKey, (int)Sex.Male),
         CalorieAdjustment = Preferences.Get(CalorieAdjustmentKey, 0.0),
+        CardioSport    = (CardioSport)Preferences.Get(CardioSportKey, (int)CardioSport.TennisSingles),
     };
 
     [SuppressMessage("Performance", "CA1822:Mark members as static",
@@ -42,6 +44,7 @@ public class UserProfileService
         Preferences.Set(AgeKey, profile.Age);
         Preferences.Set(SexKey, (int)profile.Sex);
         Preferences.Set(CalorieAdjustmentKey, profile.CalorieAdjustment);
+        Preferences.Set(CardioSportKey, (int)profile.CardioSport);
     }
 
     // ── Backend URL ─────────────────────────────────────────────────────────

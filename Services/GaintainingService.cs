@@ -21,9 +21,18 @@ public class GaintainingService
     /// <summary>Buffer added to the deficit recommendation on high-activity days.</summary>
     public const double MaxBufferKcal = 100.0;
 
-    /// <summary>TDEE = BMR + active calories burned today.</summary>
+    /// <summary>
+    /// Thermic effect of food, as a share of energy expenditure. ~10 % of intake is
+    /// spent digesting it; applied to (BMR + active) as a proxy for intake.
+    /// </summary>
+    public const double TefFactor = 0.10;
+
+    /// <summary>
+    /// TDEE = (BMR + net active calories) × (1 + TEF). activeCalories must be a
+    /// NET value (resting share already removed) so the BMR isn't counted twice.
+    /// </summary>
     public static double CalculateTdee(double bmr, double activeCalories)
-        => bmr + activeCalories;
+        => (bmr + activeCalories) * (1.0 + TefFactor);
 
     /// <summary>
     /// Target = TDEE + calorieAdjustment, never falls below BMR.

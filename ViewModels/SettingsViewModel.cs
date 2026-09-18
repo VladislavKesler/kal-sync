@@ -39,6 +39,12 @@ public partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private string _backendUrl = string.Empty;
 
+    // ── Training ─────────────────────────────────────────────────────────────
+
+    /// <summary>Which sport the watch's "Cardio" profile stands for (drives the backend formula).</summary>
+    [ObservableProperty]
+    private string _selectedCardioSport = "Tennis (Einzel)";
+
     // ── Developer options ────────────────────────────────────────────────────
 
     [ObservableProperty]
@@ -86,6 +92,10 @@ public partial class SettingsViewModel : ObservableObject
 
     public List<string> SexOptions { get; } = ["Male", "Female"];
 
+    /// <summary>Index-aligned with <see cref="CardioSport"/> enum values.</summary>
+    public List<string> CardioSportOptions { get; } =
+        ["Tennis (Einzel)", "Tennis (Doppel)", "Allgemein (nur Puls)"];
+
     public List<string> ReminderIntervalOptions { get; } =
         ["Täglich", "Alle 3 Tage", "Wöchentlich", "Alle 2 Wochen", "Monatlich"];
 
@@ -122,6 +132,7 @@ public partial class SettingsViewModel : ObservableObject
         BodyFatPercent = p.BodyFatPercent;
         AgeDouble      = p.Age;
         SelectedSex    = p.Sex == Sex.Female ? "Female" : "Male";
+        SelectedCardioSport = CardioSportOptions[(int)p.CardioSport];
         BackendUrl     = _profileService.GetBackendUrl();
         UsbDebuggingEnabled = Preferences.Get("dev.usb_debugging", false);
         WidgetEnabled       = Preferences.Get("widget.enabled", false);
@@ -151,6 +162,7 @@ public partial class SettingsViewModel : ObservableObject
             Age               = (int)Math.Round(AgeDouble),
             Sex               = SelectedSex == "Female" ? Sex.Female : Sex.Male,
             CalorieAdjustment = existing.CalorieAdjustment,
+            CardioSport       = (CardioSport)Math.Max(CardioSportOptions.IndexOf(SelectedCardioSport), 0),
         });
 
         _notificationService.ReminderEnabled      = MeasurementReminderEnabled;

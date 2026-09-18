@@ -1,4 +1,4 @@
-> Zuletzt aktualisiert: 2026-05-22
+> Zuletzt aktualisiert: 2026-09-19
 
 ## Zweck
 
@@ -9,7 +9,7 @@ Dieser Ordner ist rein darstellend — keine Business-Logik hier.
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `HomePage.xaml/.cs` | Kalorie-Dashboard (Hauptseite) |
+| `HomePage.xaml/.cs` | Kalorie-Dashboard (Hauptseite): Zielring, Anpassungs-Slider, Tageskarte „Heute" mit `BindableLayout` über `Activities` (DataTemplate `x:DataType="models:ActivityEstimate"`) + NEAT-Zeile |
 | `SettingsPage.xaml/.cs` | Benutzerprofil-Einstellungen |
 | `EmptyStateView.xaml/.cs` | Wiederverwendbare Leer-Zustands-Anzeige |
 

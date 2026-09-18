@@ -1,16 +1,30 @@
 import os
+from datetime import date
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from calorie_calculator import calculate_calories_keytel
+from calorie_calculator import (
+    ActivityInput,
+    BodyProfile,
+    calculate_calories_keytel,
+    estimate_activity,
+    neat_kcal_from_steps,
+    sport_label,
+)
 from garmin_service import GarminService
-from models import ActivityResponse, ZoneData
+from models import (
+    ActivityEstimate,
+    ActivityResponse,
+    CardioSport,
+    DaySummaryResponse,
+    ZoneData,
+)
 
 load_dotenv()
 
-app = FastAPI(title="Garmin Calorie Calculator", version="0.3.0")
+app = FastAPI(title="Garmin Calorie Calculator", version="0.4.0")
 
 # Fallback profile values, used only when a caller omits the query params
 # (e.g. manual curl testing). The MAUI app always sends the real profile.
@@ -58,9 +72,6 @@ async def get_latest_activity(
 
     garmin_calories = float(activity["garmin_calories"])
 
-    # Own estimate from the actual activity (HR, duration, body profile) —
-    # replaces the old, mislabeled passthrough of Garmin's daily
-    # active-calorie total.
     calculated_calories = calculate_calories_keytel(
         avg_hr=activity["avg_hr"],
         weight_kg=weight_kg,
@@ -82,4 +93,73 @@ async def get_latest_activity(
         zones=ZoneData(**activity["zones"]),
         confidence="low" if is_strength else "medium",
         confidence_note=STRENGTH_CONFIDENCE_NOTE if is_strength else None,
+    )
+
+
+@app.get("/api/day/{day}", response_model=DaySummaryResponse)
+async def get_day_summary(
+    day: str,
+    weight_kg: float = DEFAULT_WEIGHT_KG,
+    age: int = DEFAULT_AGE,
+    sex_male: bool = DEFAULT_SEX_MALE,
+    cardio_sport: CardioSport = CardioSport.TENNIS_SINGLES,
+) -> DaySummaryResponse:
+    """Every activity of `day` with a sport-specific net-kcal estimate, plus
+    NEAT from the steps taken outside those activities."""
+    try:
+        date.fromisoformat(day)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="day must be YYYY-MM-DD") from exc
+
+    try:
+        activities = await garmin_service.get_activities_for_day(day)
+        summary = await garmin_service.get_daily_summary(day)
+        fitness = await garmin_service.get_fitness_profile()
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Garmin API error: {exc}") from exc
+
+    profile = BodyProfile(
+        weight_kg=weight_kg, age=age, sex_male=sex_male, vo2max=fitness["vo2max"]
+    )
+
+    estimates: list[ActivityEstimate] = []
+    activity_steps = 0
+    for raw in activities:
+        activity_input = ActivityInput(
+            activity_type=raw["activity_type"],
+            duration_minutes=raw["duration_minutes"],
+            avg_hr=raw["avg_hr"],
+            moving_duration_minutes=raw["moving_duration_minutes"],
+            distance_m=raw["distance_m"],
+            elevation_gain_m=raw["elevation_gain_m"],
+        )
+        estimate = estimate_activity(activity_input, profile, cardio_sport)
+        activity_steps += raw["steps"]
+        estimates.append(
+            ActivityEstimate(
+                activity_id=raw["activity_id"],
+                start_time=raw["start_time"],
+                activity_type=raw["activity_type"],
+                sport_label=sport_label(raw["activity_type"], cardio_sport),
+                duration_minutes=int(raw["duration_minutes"]),
+                avg_hr=raw["avg_hr"],
+                max_hr=raw["max_hr"],
+                garmin_calories=raw["garmin_calories"],
+                gross_kcal=estimate.gross_kcal,
+                net_kcal=estimate.net_kcal,
+                method=estimate.method,
+                confidence=estimate.confidence,
+                confidence_note=estimate.note,
+            )
+        )
+
+    free_steps = max(summary["steps"] - activity_steps, 0)
+
+    return DaySummaryResponse(
+        date=day,
+        activities=estimates,
+        activity_kcal=round(sum(e.net_kcal for e in estimates), 1),
+        steps=summary["steps"],
+        neat_kcal=neat_kcal_from_steps(free_steps, weight_kg, fitness["height_cm"]),
+        garmin_active_kcal=summary["active_kcal"],
     )
