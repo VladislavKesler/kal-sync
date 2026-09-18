@@ -12,6 +12,7 @@ public partial class SettingsViewModel : ObservableObject
     private readonly UserProfileService _profileService;
     private readonly NotificationService _notificationService;
     private readonly WidgetService _widgetService;
+    private readonly CalibrationService _calibrationService;
 
     // Prevents RequestPinWidget() from firing during initial profile load
     private bool _profileLoaded;
@@ -91,14 +92,25 @@ public partial class SettingsViewModel : ObservableObject
     public List<string> EveningCheckTimeOptions { get; } =
         ["18:00", "19:00", "20:00", "21:00", "22:00"];
 
+    // ── Calibration display ─────────────────────────────────────────────────
+
+    /// <summary>Current self-calibration correction factor applied to Keytel-estimated activity calories.</summary>
+    public double CorrectionFactor => _calibrationService.CorrectionFactor;
+
+    /// <summary>Display text, e.g. "1.00× (noch keine Kalibrierung)" or "0.92× (zuletzt: 12.05.2026)".</summary>
+    public string CorrectionFactorLabel => _calibrationService.LastCalibrationDate is { } lastDate
+        ? $"{CorrectionFactor:F2}× (zuletzt: {lastDate:dd.MM.yyyy})"
+        : $"{CorrectionFactor:F2}× (noch keine Kalibrierung — mind. {CalibrationService.MinBalanceDaysForCalibration} Tage Trend-Daten nötig)";
+
     // ── Constructor ──────────────────────────────────────────────────────────
 
     public SettingsViewModel(UserProfileService profileService, NotificationService notificationService,
-                             WidgetService widgetService)
+                             WidgetService widgetService, CalibrationService calibrationService)
     {
         _profileService      = profileService;
         _notificationService = notificationService;
         _widgetService       = widgetService;
+        _calibrationService  = calibrationService;
         LoadProfile();
         LoadNotificationSettings();
     }

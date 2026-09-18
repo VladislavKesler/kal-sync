@@ -99,6 +99,28 @@
                                  Value="{Binding NewBodyFatPercent, Mode=TwoWay}" />
                     </Grid>
                     <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                    <Grid Padding="16,14" ColumnDefinitions="*,Auto,Auto">
+                        <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                               Text="Taille (optional)" VerticalOptions="Center" />
+                        <Label Grid.Column="1" FontFamily="{StaticResource MonoFont}" FontSize="16"
+                               TextColor="{StaticResource Ink}" VerticalOptions="Center"
+                               Margin="0,0,8,0"
+                               Text="{Binding NewWaistCm, StringFormat='{0:F0} cm'}" />
+                        <Stepper Grid.Column="2" Minimum="0" Maximum="200" Increment="1"
+                                 Value="{Binding NewWaistCm, Mode=TwoWay}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
+                    <Grid Padding="16,14" ColumnDefinitions="*,Auto,Auto">
+                        <Label Grid.Column="0" FontSize="14" TextColor="{StaticResource Ink}"
+                               Text="Hals (optional)" VerticalOptions="Center" />
+                        <Label Grid.Column="1" FontFamily="{StaticResource MonoFont}" FontSize="16"
+                               TextColor="{StaticResource Ink}" VerticalOptions="Center"
+                               Margin="0,0,8,0"
+                               Text="{Binding NewNeckCm, StringFormat='{0:F0} cm'}" />
+                        <Stepper Grid.Column="2" Minimum="0" Maximum="80" Increment="1"
+                                 Value="{Binding NewNeckCm, Mode=TwoWay}" />
+                    </Grid>
+                    <BoxView HeightRequest="1" Color="{StaticResource Hairline}" />
                     <Button Text="Eintragen"
                             Command="{Binding AddCommand}"
                             BackgroundColor="{StaticResource AccentInk}"

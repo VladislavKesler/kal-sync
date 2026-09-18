@@ -21,6 +21,8 @@ public partial class HomeViewModel : ObservableObject
     private readonly WidgetService       _widgetService;
     private readonly NotificationService _notificationService;
     private readonly WorkerDataService   _workerDataService;
+    private readonly DatabaseService     _databaseService;
+    private readonly CalibrationService  _calibrationService;
 
     // ── Calorie dashboard ────────────────────────────────────────────────────
 
@@ -32,6 +34,8 @@ public partial class HomeViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TargetKcal))]
     [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
+    [NotifyPropertyChangedFor(nameof(RecommendedAdjustment))]
+    [NotifyPropertyChangedFor(nameof(RecommendedAdjustmentLabel))]
     private double _activeCalories;
 
     [ObservableProperty]
@@ -50,6 +54,12 @@ public partial class HomeViewModel : ObservableObject
 
     /// <summary>Computed: TDEE + calorieAdjustment, floored at BMR.</summary>
     public double TargetKcal => GaintainingService.CalculateTargetKcal(Tdee, CalorieAdjustment, Bmr);
+
+    /// <summary>Automatically suggested CalorieAdjustment (-500 kcal, +100 kcal buffer on high-activity days). Shown next to the slider, never applied automatically.</summary>
+    public double RecommendedAdjustment => GaintainingService.CalculateRecommendedAdjustment(ActiveCalories);
+
+    /// <summary>Display text for the recommendation, e.g. "Empfohlen: −420 kcal".</summary>
+    public string RecommendedAdjustmentLabel => $"Empfohlen: {RecommendedAdjustment:+0;−0;0} kcal";
 
     /// <summary>Signed % of TDEE — drives the ring arc (positive = green, negative = red).</summary>
     public double AdjustmentPercent => Tdee > 0 ? CalorieAdjustment / Tdee * 100.0 : 0.0;
@@ -80,7 +90,15 @@ public partial class HomeViewModel : ObservableObject
     // ── Last Garmin activity (for the activity detail row) ───────────────────
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLowConfidenceActivity))]
+    [NotifyPropertyChangedFor(nameof(ConfidenceNote))]
     private ActivityResponse? _activity;
+
+    /// <summary>True when the last activity's calorie estimate has low confidence (e.g. strength training).</summary>
+    public bool IsLowConfidenceActivity => Activity?.Confidence == "low";
+
+    /// <summary>Explanation shown in the low-confidence tooltip, if any.</summary>
+    public string? ConfidenceNote => Activity?.ConfidenceNote;
 
     // ── State ────────────────────────────────────────────────────────────────
 
@@ -100,13 +118,17 @@ public partial class HomeViewModel : ObservableObject
         UserProfileService  userProfileService,
         WidgetService       widgetService,
         NotificationService notificationService,
-        WorkerDataService   workerDataService)
+        WorkerDataService   workerDataService,
+        DatabaseService     databaseService,
+        CalibrationService  calibrationService)
     {
         _apiService          = apiService;
         _userProfileService  = userProfileService;
         _widgetService       = widgetService;
         _notificationService = notificationService;
         _workerDataService   = workerDataService;
+        _databaseService     = databaseService;
+        _calibrationService  = calibrationService;
     }
 
     /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
@@ -125,9 +147,11 @@ public partial class HomeViewModel : ObservableObject
 
             if (activity != null)
             {
+                await RunCalibrationIfDueAsync();
+
                 Activity          = activity;
                 Bmr               = Math.Round(_userProfileService.GetBmr(profile), 0);
-                ActiveCalories    = activity.CalculatedCalories;
+                ActiveCalories    = activity.CalculatedCalories * _calibrationService.CorrectionFactor;
                 Tdee              = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
                 CalorieAdjustment = profile.CalorieAdjustment;
                 HasData           = true;
@@ -166,6 +190,24 @@ public partial class HomeViewModel : ObservableObject
         }
 
         _lastLoaded = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Every ~3 weeks, compares the calorie balance the app predicted (DailyBalance
+    /// history) against the weight trend actually measured (BodyMeasurement history)
+    /// and updates the correction factor applied to future activity-calorie estimates.
+    /// </summary>
+    private async Task RunCalibrationIfDueAsync()
+    {
+        if (!_calibrationService.IsDue) return;
+
+        var balances = await _databaseService.GetLastNDaysAsync(CalibrationService.CalibrationIntervalDays);
+        var windowStart = DateTime.Today.AddDays(-CalibrationService.CalibrationIntervalDays);
+        var measurements = (await _databaseService.GetAllAsync())
+            .Where(m => m.Date >= windowStart)
+            .ToList();
+
+        _calibrationService.RunCalibration(balances, measurements);
     }
 
     [RelayCommand]
