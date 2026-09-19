@@ -20,4 +20,7 @@ public class UserProfile
 
     /// <summary>Calorie adjustment added to TDEE (positive = surplus, negative = deficit). Floored at BMR.</summary>
     public double CalorieAdjustment { get; set; } = 0.0;
+
+    /// <summary>Sport recorded under the watch's "Cardio" profile (Garmin typeKey indoor_cardio).</summary>
+    public CardioSport CardioSport { get; set; } = CardioSport.TennisSingles;
 }

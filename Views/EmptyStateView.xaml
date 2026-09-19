@@ -33,11 +33,11 @@
             </Border>
 
             <Label FontSize="18" FontAttributes="Bold" TextColor="{StaticResource Ink}"
-                   HorizontalOptions="Center" Text="Noch keine Aktivität" />
+                   HorizontalOptions="Center" Text="Noch keine Daten" />
 
             <Label FontSize="13" TextColor="{StaticResource Muted}"
                    HorizontalTextAlignment="Center" MaximumWidthRequest="280"
-                   Text="Synchronisiere deine Garmin-Uhr, um die heutigen Aktivkalorien zu laden." />
+                   Text="Synchronisiere deine Garmin-Uhr, um den heutigen Tagesumsatz zu laden." />
 
             <Button Text="Jetzt synchronisieren"
                     Command="{Binding RefreshDataCommand}"

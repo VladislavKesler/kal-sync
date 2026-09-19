@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Threading.Tasks;
@@ -11,8 +12,8 @@ namespace kal_sync.ViewModels;
 
 /// <summary>
 /// ViewModel for HomePage.
-/// Displays the calorie dashboard: BMR, active calories, TDEE and calorie target.
-/// Also exposes the last Garmin activity for the activity detail row.
+/// Displays the calorie dashboard: BMR, active calories (all of today's
+/// activities + NEAT), TDEE and calorie target, plus today's activity list.
 /// </summary>
 public partial class HomeViewModel : ObservableObject
 {
@@ -31,6 +32,7 @@ public partial class HomeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
     private double _bmr;
 
+    /// <summary>Net activity kcal + NEAT — everything burned on top of the BMR.</summary>
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(TargetKcal))]
     [NotifyPropertyChangedFor(nameof(AdjustmentPercent))]
@@ -87,18 +89,45 @@ public partial class HomeViewModel : ObservableObject
         Justification = "XAML compiled bindings require instance properties.")]
     public string TodayLabel => DateTime.Today.ToString("dddd, d. MMMM", CultureInfo.CurrentCulture);
 
-    // ── Last Garmin activity (for the activity detail row) ───────────────────
+    // ── Today's activities (day list card) ───────────────────────────────────
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsLowConfidenceActivity))]
-    [NotifyPropertyChangedFor(nameof(ConfidenceNote))]
-    private ActivityResponse? _activity;
+    [NotifyPropertyChangedFor(nameof(HasActivities))]
+    [NotifyPropertyChangedFor(nameof(DaySummaryLabel))]
+    private List<ActivityEstimate> _activities = [];
 
-    /// <summary>True when the last activity's calorie estimate has low confidence (e.g. strength training).</summary>
-    public bool IsLowConfidenceActivity => Activity?.Confidence == "low";
+    /// <summary>Sum of all activities' net kcal, after the calibration factor.</summary>
+    [ObservableProperty]
+    private double _activityKcal;
 
-    /// <summary>Explanation shown in the low-confidence tooltip, if any.</summary>
-    public string? ConfidenceNote => Activity?.ConfidenceNote;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NeatLabel))]
+    private double _neatKcal;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DaySummaryLabel))]
+    [NotifyPropertyChangedFor(nameof(NeatLabel))]
+    private int _steps;
+
+    public bool HasActivities => Activities.Count > 0;
+
+    /// <summary>Subtitle of the day card, e.g. "2 Aktivitäten · 6.528 Schritte".</summary>
+    public string DaySummaryLabel
+    {
+        get
+        {
+            string activities = Activities.Count switch
+            {
+                0 => "Keine Aktivität",
+                1 => "1 Aktivität",
+                var n => $"{n} Aktivitäten",
+            };
+            return $"{activities} · {Steps:N0} Schritte";
+        }
+    }
+
+    /// <summary>NEAT row text, e.g. "5.812 Schritte außerhalb von Aktivitäten".</summary>
+    public string NeatLabel => $"{NeatKcal:F0} kcal aus Alltagsbewegung";
 
     // ── State ────────────────────────────────────────────────────────────────
 
@@ -131,7 +160,7 @@ public partial class HomeViewModel : ObservableObject
         _calibrationService  = calibrationService;
     }
 
-    /// <summary>Load calorie dashboard from user profile + latest Garmin activity.</summary>
+    /// <summary>Load calorie dashboard from user profile + all of today's Garmin activities.</summary>
     [RelayCommand]
     public async Task LoadLatestActivity()
     {
@@ -142,17 +171,21 @@ public partial class HomeViewModel : ObservableObject
         {
             Debug.WriteLine("[HomeViewModel] Loading calorie dashboard...");
 
-            var profile  = _userProfileService.Load();
-            var activity = await _apiService.GetLatestActivityAsync();
+            var profile = _userProfileService.Load();
+            var day     = await _apiService.GetDaySummaryAsync(DateTime.Today);
 
-            if (activity != null)
+            if (day != null)
             {
                 await RunCalibrationIfDueAsync();
 
-                Activity          = activity;
+                Activities   = day.Activities;
+                Steps        = day.Steps;
+                NeatKcal     = Math.Round(day.NeatKcal, 0);
+                ActivityKcal = Math.Round(day.ActivityKcal * _calibrationService.CorrectionFactor, 0);
+
                 Bmr               = Math.Round(_userProfileService.GetBmr(profile), 0);
-                ActiveCalories    = activity.CalculatedCalories * _calibrationService.CorrectionFactor;
-                Tdee              = GaintainingService.CalculateTdee(Bmr, ActiveCalories);
+                ActiveCalories    = ActivityKcal + NeatKcal;
+                Tdee              = Math.Round(GaintainingService.CalculateTdee(Bmr, ActiveCalories), 0);
                 CalorieAdjustment = profile.CalorieAdjustment;
                 HasData           = true;
 
@@ -175,7 +208,7 @@ public partial class HomeViewModel : ObservableObject
             }
 
             Debug.WriteLine(
-                $"[HomeViewModel] BMR={Bmr}, ActiveCal={ActiveCalories}, " +
+                $"[HomeViewModel] BMR={Bmr}, Activity={ActivityKcal}, NEAT={NeatKcal}, " +
                 $"TDEE={Tdee}, Target={TargetKcal}");
         }
         catch (Exception ex)

@@ -15,10 +15,7 @@ Daher: Getestete Klassen (Services, Models, Calculators) müssen hier **duplizie
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `Services/` | Gespiegelte/isolierte Service-Klassen zum Testen |
-| `ActivityResponse.cs` | Dupliziertes Model für Tests |
-| `TrafficLight.cs` | Hilfsmodell für Tests |
-| `UserProfile.cs` | Dupliziertes Model für Tests |
+| `Services/` | Gespiegelte/isolierte Service-Klassen zum Testen (Logik wird dupliziert, nicht referenziert) |
 
 ## Standards
 

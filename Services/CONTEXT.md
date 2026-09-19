@@ -1,4 +1,4 @@
-> Zuletzt aktualisiert: 2026-05-22
+> Zuletzt aktualisiert: 2026-09-19
 
 ## Zweck
 
@@ -9,9 +9,9 @@ Services werden als Singletons per DI in `MauiProgram.cs` registriert.
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `GarminApiService.cs` | HTTP-Client für das Python-Backend (`/api/activities/latest`, `/api/health`); sendet Gewicht/Alter/Geschlecht als Query-Parameter, da das Backend zustandslos ist |
-| `UserProfileService.cs` | Lädt/speichert Benutzerprofil (Gewicht, Körperfett-%, Alter, Geschlecht) lokal; berechnet BMR via Katch-McArdle (`370 + 21.6 × LBM`) |
-| `GaintainingService.cs` | Reine Berechnungs-Logik: TDEE, Tagesziel (Surplus/Defizit), automatische Defizit-Empfehlung (`CalculateRecommendedAdjustment`) |
+| `GarminApiServices.cs` | HTTP-Client für das Python-Backend: `GetDaySummaryAsync(day)` → `/api/day/{date}` (Produktivpfad), `GetLatestActivityAsync()` → `/api/activities/latest` (Altpfad), `/api/health`; sendet Gewicht/Alter/Geschlecht/`cardio_sport` als Query-Parameter, da das Backend zustandslos ist |
+| `UserProfileService.cs` | Lädt/speichert Benutzerprofil (Gewicht, Körperfett-%, Alter, Geschlecht, `CardioSport`-Mapping für das Garmin-Cardio-Profil) lokal; berechnet BMR via Katch-McArdle (`370 + 21.6 × LBM`) |
+| `GaintainingService.cs` | Reine Berechnungs-Logik: TDEE = `(BMR + netto Aktivkalorien) × (1 + TefFactor 0,10)` — Aktivkalorien müssen netto sein (Backend liefert netto), Tagesziel (Surplus/Defizit), automatische Defizit-Empfehlung (`CalculateRecommendedAdjustment`) |
 | `CalibrationService.cs` | Selbst-Kalibrierung: vergleicht vorhergesagte Kalorienbilanz (`DailyBalance`-Historie) mit gemessenem Gewichtstrend (`BodyMeasurement`-Historie) und leitet einen linearen Korrekturfaktor für die Keytel-Schätzung ab |
 
 ## Prozess

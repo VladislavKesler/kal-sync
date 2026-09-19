@@ -1,4 +1,4 @@
-> Zuletzt aktualisiert: 2026-05-22
+> Zuletzt aktualisiert: 2026-09-19
 
 ## Zweck
 
@@ -9,8 +9,8 @@ Kein UI-Code, kein HTTP-Code — nur Zustandsverwaltung und Kommandos.
 
 | Datei | Beschreibung |
 |-------|--------------|
-| `HomeViewModel.cs` | Dashboard-Zustand: BMR, TDEE, ActiveCalories, TargetKcal, SurplusPercent; lädt Garmin-Daten |
-| `SettingsViewModel.cs` | Benutzerprofil-Eingaben: Gewicht, Größe, Alter, Geschlecht, SurplusPercent |
+| `HomeViewModel.cs` | Dashboard-Zustand: BMR, `ActivityKcal` (Σ netto aller heutigen Aktivitäten × Kalibrierfaktor), `NeatKcal`, `ActiveCalories = ActivityKcal + NeatKcal`, TDEE, TargetKcal, CalorieAdjustment; `Activities`-Liste für die Tageskarte; lädt `/api/day/{heute}` — Ruhetag ist gültiger Zustand (`HasData = true`, leere Liste) |
+| `SettingsViewModel.cs` | Benutzerprofil-Eingaben: Gewicht, Körperfett, Alter, Geschlecht, Cardio-Profil-Zuordnung (`SelectedCardioSport`, index-aligned mit `CardioSport`-Enum), Benachrichtigungen, Widget |
 
 ## Prozess
 
