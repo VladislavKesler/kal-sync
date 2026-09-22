@@ -22,17 +22,16 @@ public class GaintainingService
     public const double MaxBufferKcal = 100.0;
 
     /// <summary>
-    /// Thermic effect of food, as a share of energy expenditure. ~10 % of intake is
-    /// spent digesting it; applied to (BMR + active) as a proxy for intake.
-    /// </summary>
-    public const double TefFactor = 0.10;
-
-    /// <summary>
-    /// TDEE = (BMR + net active calories) × (1 + TEF). activeCalories must be a
-    /// NET value (resting share already removed) so the BMR isn't counted twice.
+    /// TDEE = BMR + net active calories. activeCalories must be a NET value
+    /// (resting share already removed) so the BMR isn't counted twice.
+    /// No TEF (thermic effect of food) markup: TEF is a share of actual intake,
+    /// which this app doesn't track (intake is tracked externally), so a flat
+    /// percentage on top of expenditure would just be an unfounded inflation of
+    /// the daily target — the same kind of bias already removed from the
+    /// activity-calorie estimates.
     /// </summary>
     public static double CalculateTdee(double bmr, double activeCalories)
-        => (bmr + activeCalories) * (1.0 + TefFactor);
+        => bmr + activeCalories;
 
     /// <summary>
     /// Target = TDEE + calorieAdjustment, never falls below BMR.

@@ -12,29 +12,24 @@ public class GaintainingServiceTests
     // --- TDEE ---
 
     [Fact]
-    public void Tdee_ShouldAddTefOnTopOfBmrAndNetActiveCalories()
+    public void Tdee_ShouldBeSumOfBmrAndNetActiveCalories()
     {
         double bmr = 1942.0;
         double activeCalories = 487.0;
 
         double tdee = CalculateTdee(bmr, activeCalories);
 
-        // (1942 + 487) × 1.10 = 2671.9
-        tdee.Should().BeApproximately(2671.9, precision: 0.1);
+        // No TEF markup: TEF depends on actual intake, which this app
+        // doesn't track, so it's not approximated here.
+        tdee.Should().BeApproximately(2429.0, precision: 0.1);
     }
 
     [Fact]
-    public void Tdee_OnRestDay_IsBmrPlusTefOnly()
+    public void Tdee_OnRestDay_IsBmrOnly()
     {
         double tdee = CalculateTdee(bmr: 2000.0, activeCalories: 0.0);
 
-        tdee.Should().BeApproximately(2000.0 * (1.0 + TefFactor), precision: 0.01);
-    }
-
-    [Fact]
-    public void TefFactor_IsTenPercent()
-    {
-        TefFactor.Should().Be(0.10);
+        tdee.Should().BeApproximately(2000.0, precision: 0.01);
     }
 
     // --- Target calories (CalorieAdjustment formula) ---
@@ -165,10 +160,9 @@ public class GaintainingServiceTests
     private const double MaxDeficitKcal = -500.0;
     private const double HighActivityThresholdKcal = 600.0;
     private const double MaxBufferKcal = 100.0;
-    private const double TefFactor = 0.10;
 
     private static double CalculateTdee(double bmr, double activeCalories)
-        => (bmr + activeCalories) * (1.0 + TefFactor);
+        => bmr + activeCalories;
 
     private static double CalculateTargetKcal(double tdee, double calorieAdjustment, double bmr)
         => Math.Max(tdee + calorieAdjustment, bmr);
