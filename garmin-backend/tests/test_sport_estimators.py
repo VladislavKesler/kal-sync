@@ -9,8 +9,6 @@ import pytest
 from calorie_calculator import (
     MET_STRENGTH_ACTIVE_SET,
     MET_STRENGTH_REST,
-    MET_TENNIS_DOUBLES,
-    MET_TENNIS_SINGLES,
     ActivityInput,
     BodyProfile,
     calculate_calories_keytel,
@@ -116,26 +114,42 @@ class TestStrength:
 
 
 class TestTennis:
-    def test_ensemble_is_mean_of_met_and_keytel(self) -> None:
+    def test_matches_pure_keytel_vo2max(self) -> None:
+        # Regression guard: no flat-MET blend. Real sessions (same player)
+        # showed the old MET+HR average swing from matching Garmin exactly
+        # at high intensity to 35 % over it at low intensity, because the
+        # fixed MET ignored how hard the match actually was — pure HR-based
+        # Keytel tracked Garmin consistently across all recorded intensities.
         match = ActivityInput("indoor_cardio", 49.7, 118)
-        est = estimate_tennis(match, MALE_89, singles=True)
-        gross_met = met_kcal(MET_TENNIS_SINGLES, 89.2, 49.7)
-        gross_hr = keytel_kcal_per_min(118, 89.2, 35, True, 44.0) * 49.7
-        assert est.gross_kcal == pytest.approx((gross_met + gross_hr) / 2, abs=0.1)
-        assert est.method == "tennis_ensemble"
+        est = estimate_tennis(match, MALE_89)
+        expected_gross = keytel_kcal_per_min(118, 89.2, 35, True, 44.0) * 49.7
+        assert est.gross_kcal == pytest.approx(expected_gross, abs=0.1)
+        assert est.method == "tennis_keytel_vo2max"
 
-    def test_doubles_burns_less_than_singles(self) -> None:
-        match = ActivityInput("indoor_cardio", 60.0, 120)
-        singles = estimate_tennis(match, MALE_89, singles=True)
-        doubles = estimate_tennis(match, MALE_89, singles=False)
-        assert doubles.net_kcal < singles.net_kcal
-        assert MET_TENNIS_DOUBLES < MET_TENNIS_SINGLES
+    def test_method_without_vo2max(self) -> None:
+        match = ActivityInput("indoor_cardio", 40.0, 120)
+        est = estimate_tennis(match, MALE_89_NO_VO2)
+        assert est.method == "tennis_keytel"
+
+    def test_higher_hr_burns_more(self) -> None:
+        easy = estimate_tennis(ActivityInput("indoor_cardio", 50.0, 118), MALE_89)
+        hard = estimate_tennis(ActivityInput("indoor_cardio", 50.0, 159), MALE_89)
+        assert hard.net_kcal > easy.net_kcal
+
+    def test_real_sessions_track_garmin_within_a_quarter(self) -> None:
+        # 20.09 hard match (HR159→Garmin 700), 17.09 easy (HR118→346),
+        # 14.09 easy (HR129→504) — pure Keytel lands consistently ~15-21%
+        # above Garmin instead of the old formula's 1-57% swing.
+        sessions = [(55.1, 159, 700.0), (49.7, 118, 346.0), (58.6, 129, 504.0)]
+        for minutes, hr, garmin in sessions:
+            est = estimate_tennis(ActivityInput("indoor_cardio", minutes, hr), MALE_89)
+            assert est.net_kcal / garmin < 1.25
 
 
 class TestDispatch:
     def test_indoor_cardio_maps_to_tennis_by_default(self) -> None:
         est = estimate_activity(ActivityInput("indoor_cardio", 50.0, 120), MALE_89)
-        assert est.method == "tennis_ensemble"
+        assert est.method == "tennis_keytel_vo2max"
 
     def test_indoor_cardio_generic_uses_keytel(self) -> None:
         est = estimate_activity(
@@ -145,11 +159,11 @@ class TestDispatch:
         )
         assert est.method == "keytel_vo2max"
 
-    def test_native_tennis_type_is_singles(self) -> None:
+    def test_native_tennis_type_ignores_cardio_sport_setting(self) -> None:
         est = estimate_activity(
             ActivityInput("tennis", 50.0, 120), MALE_89, CardioSport.GENERIC
         )
-        assert est.method == "tennis_ensemble"
+        assert est.method == "tennis_keytel_vo2max"
 
     def test_cycling_uses_keytel_and_plain_keytel_without_vo2max(self) -> None:
         with_vo2 = estimate_activity(ActivityInput("cycling", 32.0, 120), MALE_89)

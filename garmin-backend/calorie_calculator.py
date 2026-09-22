@@ -112,8 +112,6 @@ def calculate_calories_keytel(
 # of the BMR without counting the resting metabolism twice.
 
 # MET values: Ainsworth et al., Compendium of Physical Activities (2011).
-MET_TENNIS_SINGLES = 8.0
-MET_TENNIS_DOUBLES = 6.0
 MET_STRENGTH_ACTIVE_SET = 6.0
 MET_STRENGTH_REST = 1.8
 MET_STRENGTH_FALLBACK = 3.5
@@ -269,21 +267,30 @@ def estimate_strength(activity: ActivityInput, profile: BodyProfile) -> CalorieE
     )
 
 
-def estimate_tennis(
-    activity: ActivityInput, profile: BodyProfile, singles: bool
-) -> CalorieEstimate:
-    met = MET_TENNIS_SINGLES if singles else MET_TENNIS_DOUBLES
-    gross_met = met_kcal(met, profile.weight_kg, activity.duration_minutes)
-    gross_hr = _keytel_gross(activity, profile)
-    gross = (gross_met + gross_hr) / 2.0
+def estimate_tennis(activity: ActivityInput, profile: BodyProfile) -> CalorieEstimate:
+    """HR-based (Keytel+VO2max) estimate for tennis — no flat MET blend.
+
+    A blend with a fixed MET value (Ainsworth "tennis, singles" = 8.0)
+    was tried first, but real recorded sessions from the same player showed
+    it swings wildly with match intensity: it matched Garmin almost exactly
+    at avg HR 159 (a hard match) but ran 35 % over Garmin at avg HR 118 (an
+    easy match), because the fixed MET assumes constant effort regardless of
+    how hard the match actually was. Pure HR-based Keytel tracked Garmin
+    consistently (~15-21 % above it) across all three recorded intensities,
+    so it replaces the blend entirely — a stable, explainable gap beats an
+    unpredictable one.
+    """
+    gross = _keytel_gross(activity, profile)
     rest = resting_kcal(profile.weight_kg, activity.duration_minutes)
+    method = "tennis_keytel_vo2max" if profile.vo2max is not None else "tennis_keytel"
     return _finish(
         gross,
         rest,
-        "tennis_ensemble",
+        method,
         CONFIDENCE_MEDIUM,
-        "Mittel aus MET-Modell und HR-Formel — bei Stop-and-Go-Sport ist die "
-        "Herzfrequenz allein kein verlässlicher Prädiktor.",
+        "HR-basierte Schätzung (Keytel). Bei Stop-and-Go-Sport wie Tennis kann "
+        "die Herzfrequenz den tatsächlichen Verbrauch etwas überschätzen — "
+        "erfahrungsgemäß ca. 15–20 % über Garmins eigenem Wert.",
     )
 
 
@@ -301,12 +308,10 @@ def estimate_activity(
     if kind in TYPE_STRENGTH:
         return estimate_strength(activity, profile)
     if kind in TYPE_TENNIS:
-        return estimate_tennis(activity, profile, singles=True)
+        return estimate_tennis(activity, profile)
     if kind in TYPE_INDOOR_CARDIO:
-        if cardio_sport is CardioSport.TENNIS_SINGLES:
-            return estimate_tennis(activity, profile, singles=True)
-        if cardio_sport is CardioSport.TENNIS_DOUBLES:
-            return estimate_tennis(activity, profile, singles=False)
+        if cardio_sport in (CardioSport.TENNIS_SINGLES, CardioSport.TENNIS_DOUBLES):
+            return estimate_tennis(activity, profile)
         return estimate_keytel(
             activity,
             profile,

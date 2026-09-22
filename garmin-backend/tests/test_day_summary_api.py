@@ -97,7 +97,7 @@ async def test_day_summary_aggregates_all_activities(
     assert len(body["activities"]) == 2
     assert body["activities"][0]["method"] == "strength_set_model"
     assert body["activities"][0]["sport_label"] == "Krafttraining"
-    assert body["activities"][1]["method"] == "tennis_ensemble"
+    assert body["activities"][1]["method"] == "tennis_keytel_vo2max"
     assert body["activities"][1]["sport_label"] == "Tennis (Einzel)"
     assert body["activity_kcal"] == pytest.approx(
         sum(a["net_kcal"] for a in body["activities"]), abs=0.2
