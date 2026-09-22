@@ -132,6 +132,7 @@ async def get_day_summary(
             moving_duration_minutes=raw["moving_duration_minutes"],
             distance_m=raw["distance_m"],
             elevation_gain_m=raw["elevation_gain_m"],
+            garmin_calories=raw["garmin_calories"],
         )
         estimate = estimate_activity(activity_input, profile, cardio_sport)
         activity_steps += raw["steps"]

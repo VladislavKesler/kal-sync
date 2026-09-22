@@ -156,6 +156,7 @@ class ActivityInput:
     moving_duration_minutes: float = 0.0
     distance_m: float = 0.0
     elevation_gain_m: float = 0.0
+    garmin_calories: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -214,28 +215,77 @@ def estimate_keytel(
     )
 
 
+def estimate_garmin_native(
+    activity: ActivityInput, profile: BodyProfile, method: str, note: str
+) -> CalorieEstimate:
+    """Trust Garmin's own per-activity calorie value.
+
+    Garmin's daily totals satisfy activeKilocalories + bmrKilocalories =
+    totalKilocalories, so the per-activity `calories` figure is already NET
+    of the resting share — it can be used directly as net_kcal without
+    subtracting anything further.
+
+    Used for running/cycling: a properly tracked GPS activity gives Garmin's
+    algorithm speed, elevation and (for some runs) power data that a
+    generic HR-only regression formula like Keytel simply doesn't have.
+    """
+    net = activity.garmin_calories
+    rest = resting_kcal(profile.weight_kg, activity.duration_minutes)
+    return _finish(net + rest, rest, method, CONFIDENCE_HIGH, note)
+
+
 def estimate_running(activity: ActivityInput, profile: BodyProfile) -> CalorieEstimate:
-    if activity.distance_m < MIN_RUNNING_DISTANCE_M or activity.duration_minutes <= 0:
-        return estimate_keytel(
+    if activity.garmin_calories > 0:
+        return estimate_garmin_native(
             activity,
             profile,
-            note="Keine Distanz aufgezeichnet — HR-basierte Schätzung statt "
-            "Distanzformel.",
+            "garmin_native",
+            "Direkt von Garmin übernommen — GPS-Distanz, Höhenmeter und ggf. "
+            "Laufleistung liefern mehr Signal als eine reine Puls-Formel.",
         )
 
-    speed_m_min = activity.distance_m / activity.duration_minutes
-    grade = min(max(activity.elevation_gain_m / activity.distance_m, 0.0), MAX_GRADE)
-    net_vo2 = ACSM_RUNNING_HORIZONTAL * speed_m_min + (
-        ACSM_RUNNING_VERTICAL * speed_m_min * grade
+    if activity.distance_m >= MIN_RUNNING_DISTANCE_M and activity.duration_minutes > 0:
+        speed_m_min = activity.distance_m / activity.duration_minutes
+        grade = min(
+            max(activity.elevation_gain_m / activity.distance_m, 0.0), MAX_GRADE
+        )
+        net_vo2 = ACSM_RUNNING_HORIZONTAL * speed_m_min + (
+            ACSM_RUNNING_VERTICAL * speed_m_min * grade
+        )
+        litres_per_min = net_vo2 * profile.weight_kg / 1000.0
+        net = litres_per_min * KCAL_PER_LITRE_O2 * activity.duration_minutes
+        rest = resting_kcal(profile.weight_kg, activity.duration_minutes)
+        return _finish(
+            net + rest,
+            rest,
+            "acsm_running",
+            CONFIDENCE_HIGH,
+            "Kein Kalorienwert von Garmin — Distanzformel (ACSM) als Fallback.",
+        )
+
+    return estimate_keytel(
+        activity,
+        profile,
+        note="Weder Garmin-Kalorienwert noch Distanz vorhanden — "
+        "HR-basierte Schätzung als letzter Fallback.",
     )
-    litres_per_min = net_vo2 * profile.weight_kg / 1000.0
-    net = litres_per_min * KCAL_PER_LITRE_O2 * activity.duration_minutes
-    rest = resting_kcal(profile.weight_kg, activity.duration_minutes)
-    return _finish(net + rest, rest, "acsm_running", CONFIDENCE_HIGH, None)
 
 
 def estimate_cycling(activity: ActivityInput, profile: BodyProfile) -> CalorieEstimate:
-    return estimate_keytel(activity, profile)
+    if activity.garmin_calories > 0:
+        return estimate_garmin_native(
+            activity,
+            profile,
+            "garmin_native",
+            "Direkt von Garmin übernommen — nutzt ggf. Trittfrequenz/Leistung, "
+            "die eine reine Puls-Formel nicht hat.",
+        )
+    return estimate_keytel(
+        activity,
+        profile,
+        note="Kein Kalorienwert von Garmin für diese Fahrt — HR-basierte "
+        "Schätzung als Fallback.",
+    )
 
 
 def estimate_strength(activity: ActivityInput, profile: BodyProfile) -> CalorieEstimate:

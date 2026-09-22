@@ -44,7 +44,18 @@ class TestKeytelVo2maxVariant:
 
 
 class TestRunning:
-    def test_flat_10k_in_60min_is_about_one_kcal_per_kg_km(self) -> None:
+    def test_garmin_value_is_used_directly_when_present(self) -> None:
+        run = ActivityInput(
+            "running", 60.0, 150, distance_m=10_000, garmin_calories=650.0
+        )
+        est = estimate_running(run, MALE_89)
+        assert est.net_kcal == pytest.approx(650.0, abs=0.1)
+        assert est.gross_kcal == pytest.approx(650.0 + 89.2, rel=0.01)
+        assert est.method == "garmin_native"
+        assert est.confidence == "high"
+        assert est.note is not None
+
+    def test_distance_formula_is_fallback_without_garmin_value(self) -> None:
         run = ActivityInput("running", 60.0, 150, distance_m=10_000)
         est = estimate_running(run, MALE_89)
         # ACSM: net VO2 = 0.2 · 166.7 m/min = 33.3 ml/kg/min → ≈ 892 kcal net
@@ -65,7 +76,7 @@ class TestRunning:
         )
         assert hilly.net_kcal > flat.net_kcal
 
-    def test_missing_distance_falls_back_to_keytel(self) -> None:
+    def test_missing_garmin_value_and_distance_falls_back_to_keytel(self) -> None:
         treadmill = ActivityInput("running", 30.0, 150, distance_m=0)
         est = estimate_running(treadmill, MALE_89)
         assert est.method == "keytel_vo2max"
@@ -165,7 +176,14 @@ class TestDispatch:
         )
         assert est.method == "tennis_keytel_vo2max"
 
-    def test_cycling_uses_keytel_and_plain_keytel_without_vo2max(self) -> None:
+    def test_cycling_uses_garmin_value_when_present(self) -> None:
+        est = estimate_activity(
+            ActivityInput("cycling", 32.0, 120, garmin_calories=256.0), MALE_89
+        )
+        assert est.method == "garmin_native"
+        assert est.net_kcal == pytest.approx(256.0, abs=0.1)
+
+    def test_cycling_falls_back_to_keytel_without_garmin_value(self) -> None:
         with_vo2 = estimate_activity(ActivityInput("cycling", 32.0, 120), MALE_89)
         without = estimate_activity(ActivityInput("cycling", 32.0, 120), MALE_89_NO_VO2)
         assert with_vo2.method == "keytel_vo2max"
@@ -177,7 +195,10 @@ class TestDispatch:
 
     def test_net_never_exceeds_gross_and_never_negative(self) -> None:
         for kind in ["running", "cycling", "strength_training", "indoor_cardio"]:
-            est = estimate_activity(ActivityInput(kind, 40.0, 60, 10.0, 5000), MALE_89)
+            est = estimate_activity(
+                ActivityInput(kind, 40.0, 60, 10.0, 5000, garmin_calories=300.0),
+                MALE_89,
+            )
             assert 0.0 <= est.net_kcal <= est.gross_kcal
 
     @pytest.mark.parametrize(
